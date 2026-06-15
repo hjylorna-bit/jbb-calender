@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JbB Visual Content Calendar</title>
+<style>
+:root{
+  --forest:#1B6B4A;--navy:#1B3A5C;--bg:#F4F6F4;--ink:#243027;--muted:#6B7B72;--line:#DDE4E0;
+  --s1:#2E75B6;--s1b:#DCEBF8;--s3:#D85A30;--s3b:#FBE3D7;--both:#B8860B;--bothb:#FBF1D4;--s5:#6A4FB6;--s5b:#ECE6F8;
+  --qw:#E8F5EE;--build:#FBF1D4;--scale:#FBE3D7;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header.top{background:var(--forest);color:#fff;padding:14px 24px;position:sticky;top:0;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+header.top h1{margin:0;font-size:19px}
+header.top p{margin:2px 0 0;font-size:12px;opacity:.9}
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.nav button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12.5px;font-weight:600;cursor:pointer}
+.nav button.active{background:#fff;color:var(--forest)}
+.tools{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:10px}
+.tools button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.45);border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+.tools button:hover{background:rgba(255,255,255,.12)}
+.note{font-size:11.5px;opacity:.85;margin-left:auto}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px}
+.view{display:none}.view.active{display:block}
+
+/* calendar toolbar */
+.calbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:14px}
+.mnav{display:flex;align-items:center;gap:10px}
+.mnav button{background:#fff;border:1px solid var(--line);border-radius:8px;width:34px;height:34px;font-size:16px;cursor:pointer;color:var(--navy)}
+.mnav .mtitle{font-size:18px;font-weight:700;color:var(--navy);min-width:150px;text-align:center}
+.filters{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.filters .lbl{font-size:11.5px;color:var(--muted);font-weight:600}
+.fchip{border:1.5px solid var(--line);background:#fff;border-radius:20px;padding:4px 11px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none}
+.fchip .dot{width:11px;height:11px;border-radius:3px}
+.fchip.off{opacity:.35}
+.monthmeta{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.phasebadge{padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700}
+.ph-qw{background:var(--qw);color:#1B6B4A}.ph-build{background:var(--build);color:#8a6d00}.ph-scale{background:var(--scale);color:#a8431f}
+.monthmeta .theme{font-size:13px}.monthmeta .hook{font-size:12px;color:var(--muted)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:4px 0}
+.dow.thu{color:var(--forest)}
+.day{background:#fff;border:1px solid var(--line);border-radius:10px;min-height:104px;padding:6px 7px;cursor:pointer;transition:.12s;position:relative;overflow:hidden}
+.day:hover{border-color:var(--forest);box-shadow:0 2px 8px rgba(27,107,74,.12)}
+.day.empty{background:transparent;border:none;cursor:default}
+.day.thu{background:#fbfdfb;border-color:#cfe6da}
+.day .dn{font-size:12.5px;font-weight:700;color:var(--navy)}
+.day.thu .dn::after{content:" \2605";color:var(--forest);font-size:9px}
+.day .fest{font-size:9.5px;background:#fdf3e7;color:#a8431f;border:1px solid #f3d9bd;border-radius:10px;padding:1px 6px;display:inline-block;margin-top:2px;line-height:1.4}
+.evt{margin-top:4px;font-size:10.5px;border-radius:5px;padding:3px 5px;display:flex;gap:5px;align-items:flex-start;border-left:3px solid #ccc;background:#f7f9f8}
+.evt svg{width:12px;height:12px;flex:0 0 12px;margin-top:1px}
+.evt .et{line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.more{font-size:9.5px;color:var(--muted);margin-top:3px}
+
+/* seg colors */
+.seg-s1{background:var(--s1b);border-left-color:var(--s1)}
+.seg-s3{background:var(--s3b);border-left-color:var(--s3)}
+.seg-both{background:var(--bothb);border-left-color:var(--both)}
+.seg-s5{background:var(--s5b);border-left-color:var(--s5)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:80;display:none}
+.scrim.open{display:block}
+.drawer{position:fixed;top:0;right:-460px;width:440px;max-width:92vw;height:100%;background:#fff;z-index:90;
+  box-shadow:-4px 0 20px rgba(0,0,0,.18);transition:right .22s;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.dhead{background:var(--navy);color:#fff;padding:16px 20px}
+.dhead h3{margin:0;font-size:17px}.dhead .sub{font-size:12px;opacity:.85;margin-top:2px}
+.dhead .x{position:absolute;top:14px;right:16px;cursor:pointer;font-size:20px;color:#fff;background:none;border:none}
+.dbody{padding:14px 16px;overflow-y:auto;flex:1}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px;border-left-width:4px}
+.item .row1{display:flex;gap:8px;margin-bottom:7px}
+.item select{flex:1;font-size:12px;padding:5px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.item .txt{width:100%;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:7px;resize:vertical;min-height:46px;font-family:inherit}
+.item .del{background:#fbe3e0;color:#a8431f;border:none;border-radius:6px;padding:4px 9px;font-size:11px;cursor:pointer;float:right;margin-top:6px}
+.additem{width:100%;background:var(--qw);color:var(--forest);border:1px dashed var(--forest);border-radius:9px;padding:9px;font-size:12.5px;font-weight:600;cursor:pointer}
+
+/* reference views */
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:16px;color:var(--navy)}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:8px 10px;font-size:12.5px;text-align:left;vertical-align:top}
+th{background:var(--navy);color:#fff;font-weight:600}
+tr:nth-child(even) td{background:#fafdfb}
+.k{font-size:12.5px;line-height:1.7}
+.k b{color:var(--navy)}
+@media print{.nav,.tools,.calbar .filters,.note,.scrim,.drawer{display:none!important}.day{min-height:90px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Journeys by Breadfast &mdash; Visual Content Calendar</h1>
+  <p>August 2026 &ndash; January 2027 &middot; Click any day to open and edit. Filter by segment. Auto-saves in this browser.</p>
+  <div class="nav" id="nav">
+    <button data-v="calendar" class="active">&#128197; Calendar</button>
+    <button data-v="roadmap">&#128506; Roadmap</button>
+    <button data-v="playbook">&#128226; Channel Playbook</button>
+    <button data-v="pillars">&#129513; Content Pillars</button>
+    <button data-v="seg5">&#128279; Seg 5 Activation</button>
+    <button data-v="hooks">&#127881; Seasonal Hooks</button>
+    <button data-v="guide">&#8505; Guide</button>
+  </div>
+  <div class="tools">
+    <button onclick="saveNow()">Save</button>
+    <button onclick="exportJSON()">Export .json</button>
+    <button onclick="document.getElementById('imp').click()">Import</button>
+    <input id="imp" type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button onclick="window.print()">Print / PDF</button>
+    <button onclick="resetAll()">Reset</button>
+    <span class="note" id="savenote">Loaded</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- CALENDAR -->
+  <div class="view active" id="v-calendar">
+    <div class="calbar">
+      <div class="mnav">
+        <button onclick="prevM()">&#8249;</button>
+        <span class="mtitle" id="mtitle"></span>
+        <button onclick="nextM()">&#8250;</button>
+      </div>
+      <div class="filters">
+        <span class="lbl">Show:</span>
+        <span class="fchip" data-seg="s1"><span class="dot" style="background:var(--s1)"></span>Seg 1</span>
+        <span class="fchip" data-seg="s3"><span class="dot" style="background:var(--s3)"></span>Seg 3</span>
+        <span class="fchip" data-seg="both"><span class="dot" style="background:var(--both)"></span>Both</span>
+        <span class="fchip" data-seg="s5"><span class="dot" style="background:var(--s5)"></span>Seg 5</span>
+      </div>
+    </div>
+    <div class="monthmeta" id="monthmeta"></div>
+    <div class="grid" id="dow"></div>
+    <div class="grid" id="grid" style="margin-top:6px"></div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="view" id="v-roadmap"><div class="card"><h2>6-Month Roadmap</h2><div id="roadmapTbl"></div></div></div>
+
+  <!-- PLAYBOOK -->
+  <div class="view" id="v-playbook"><div class="card"><h2>Channel-by-Channel Playbook</h2>
+    <table><tr><th>Channel</th><th>Segment</th><th>Role &amp; cadence</th><th>Tone / format</th><th>Sample content</th></tr>
+    <tr><td>TikTok</td><td>Seg 1</td><td>#1 discovery; 4&ndash;5 videos/wk</td><td>Authentic short video, native trends</td><td>"48h in Hurghada under EGP 5,000"; cross-post Breadfast's 181.9K TikTok</td></tr>
+    <tr><td>Instagram</td><td>Seg 1</td><td>Right audience; 3&ndash;4 Reels/wk</td><td>Aspirational but real; price overlays</td><td>"EGP X gets you this"; weekend countdown stories</td></tr>
+    <tr><td>Facebook</td><td>Seg 3</td><td>Family platform; 3&ndash;4 posts/wk</td><td>Reassuring, Arabic+English, shareable</td><td>Family resort guides; testimonials; free-cancellation trust posts</td></tr>
+    <tr><td>SMS</td><td>Both</td><td>Conversion workhorse; Wed&ndash;Thu</td><td>Short, EGP, urgency; 7&ndash;9pm</td><td>"Red Sea this weekend from EGP 2,500/night, book now"</td></tr>
+    <tr><td>In-App Banner</td><td>Both / Seg 5</td><td>Zero-cost; refresh weekly</td><td>Contextual, tied to season + behaviour</td><td>"You shopped for the weekend, now book it"</td></tr>
+    <tr><td>Email / Newsletter</td><td>Both / Seg 5</td><td>New touchpoint; 1/wk</td><td>Editorial storytelling</td><td>Weekly "top 5 domestic stays"; gift-voucher tie-ins</td></tr>
+    </table></div></div>
+
+  <!-- PILLARS -->
+  <div class="view" id="v-pillars"><div class="card"><h2>Content Pillars (reusable post types)</h2>
+    <p class="k">Mix across the week: ~60% promo/conversion (Wed&ndash;Thu), ~40% brand-story (Fri&ndash;Sun).</p>
+    <table><tr><th>Pillar</th><th>Type</th><th>Segment</th><th>When</th><th>Example</th></tr>
+    <tr><td>Destination spotlight</td><td>Brand story</td><td>Both</td><td>Fri&ndash;Sun</td><td>"A weekend in Fayoum" with real EGP cost</td></tr>
+    <tr><td>Price-anchored deal</td><td>Promo</td><td>Seg 1</td><td>Wed&ndash;Thu</td><td>"EGP 2,500/night gets you this Red Sea room this weekend"</td></tr>
+    <tr><td>Family-ready stays</td><td>Trust/Promo</td><td>Seg 3</td><td>Wed&ndash;Thu</td><td>"4 nights, 2 adults + 2 kids, all-inclusive, free cancellation"</td></tr>
+    <tr><td>Real traveller story</td><td>Brand story</td><td>Both</td><td>Fri&ndash;Sun</td><td>"She booked Tue, watched the sunset Fri"</td></tr>
+    <tr><td>How-it-works / trust</td><td>Trust</td><td>Both</td><td>Any</td><td>"Book in EGP, Arabic support, instant confirmation"</td></tr>
+    <tr><td>Seasonal hook</td><td>Promo</td><td>Both</td><td>Calendar</td><td>Summer / back-to-school / winter-sun themed package</td></tr>
+    <tr><td>Breadfast ecosystem</td><td>Cross-sell</td><td>Seg 5</td><td>Any</td><td>"Earn/redeem on Journeys" loyalty + gift-voucher tie-in</td></tr>
+    <tr><td>Urgency / last-chance</td><td>Promo</td><td>Seg 1</td><td>Thu</td><td>"Offer ends tonight, book your weekend now"</td></tr>
+    </table></div></div>
+
+  <!-- SEG5 -->
+  <div class="view" id="v-seg5"><div class="card"><h2>Segment 5 Activation &mdash; Breadfast Convenience Loyalists</h2>
+    <p class="k">Seg 5 is <b>not a separate content audience</b>. It is the acquisition channel: the Breadfast base we activate to reach Seg 1 &amp; Seg 3. It runs <b>through the owned channels</b> (SMS, In-App, Email).</p>
+    <table><tr><th>Month / Phase</th><th>Ecosystem hook</th><th>Owned-channel action</th><th>Bridges to</th></tr>
+    <tr><td>Aug (Quick Wins)</td><td>First-time travel nudge</td><td>In-app after a grocery order: "You shopped for the weekend, now book it"</td><td>Seg 1 weekend escapes</td></tr>
+    <tr><td>Sep (Quick Wins)</td><td>"Why book travel with Breadfast"</td><td>Newsletter + in-app explainer: EGP, Arabic support, instant confirmation</td><td>Both &mdash; trust transfer</td></tr>
+    <tr><td>Oct (Build)</td><td>Breadfast Pay tie-in</td><td>SMS: "Pay for your trip with Breadfast Pay, in EGP"</td><td>Seg 3 &mdash; payment ease</td></tr>
+    <tr><td>Nov (Build)</td><td>Loyalty points on travel</td><td>In-app + email: "Earn points on your next trip, like groceries"</td><td>Both &mdash; repeat behaviour</td></tr>
+    <tr><td>Dec (Scale)</td><td>Gift voucher mechanic</td><td>Email + SMS: "Breadfast gift vouchers now redeemable on Journeys" (88.9% confirm)</td><td>Seg 3 &mdash; high-intent gifting</td></tr>
+    <tr><td>Jan (Scale)</td><td>Cross-vertical personalisation</td><td>Targeted in-app: premium grocery buyers get curated premium stays</td><td>Premium &mdash; cross-sell</td></tr>
+    </table>
+    <p class="k" style="margin-top:12px"><b>Always-on:</b> cross-promote from Breadfast's main social (IG 295K, TikTok 181.9K) for ~350&times; reach; make JbB support visible &amp; distinct; carry Breadfast visual identity into Journeys; always price in EGP.</p>
+  </div></div>
+
+  <!-- HOOKS -->
+  <div class="view" id="v-hooks"><div class="card"><h2>Seasonal Hooks &amp; Festivals (Aug 2026 &ndash; Jan 2027)</h2>
+    <p class="k">Fixed national holidays are marked on the calendar. Confirm shifting Islamic dates (Prophet's Birthday, Islamic New Year) each year &mdash; they move ~11 days earlier annually.</p>
+    <table><tr><th>Window</th><th>Occasion / season</th><th>Travel behaviour</th><th>Content angle</th></tr>
+    <tr><td>Aug</td><td>Peak / late summer; North Coast peak</td><td>Families take longer trips; couples take weekends</td><td>North Coast all-inclusive (Seg3) + weekend escapes (Seg1)</td></tr>
+    <tr><td>Sep</td><td>Back to school</td><td>Travel slows; short adult-only breaks</td><td>"Reset" couple weekend breaks (Seg1)</td></tr>
+    <tr><td>Oct 6</td><td>Armed Forces Day (national holiday)</td><td>Long-weekend domestic demand</td><td>Long-weekend getaway push</td></tr>
+    <tr><td>Sep&ndash;Oct</td><td>Shoulder season</td><td>Value-seekers; cooler weather</td><td>Discovery + value framing; cultural trips</td></tr>
+    <tr><td>Nov</td><td>Year-end approaching; winter sun</td><td>Advance planning for winter holidays</td><td>Plan-ahead (Seg3) + weekend sun (Seg1)</td></tr>
+    <tr><td>Dec</td><td>Winter holidays; Red Sea warm escapes</td><td>Winter-sun demand; diving; family trips</td><td>Winter-sun packages (Seg3) + year-end getaways (Seg1)</td></tr>
+    <tr><td>Jan 1</td><td>New Year's Day</td><td>"New year, new journeys" intent</td><td>Fresh-start weekend escapes</td></tr>
+    <tr><td>Jan 7</td><td>Coptic Christmas (national holiday)</td><td>Family gatherings + short trips</td><td>Family winter break</td></tr>
+    <tr><td>Jan 25</td><td>Revolution Day / Police Day (holiday)</td><td>Long-weekend domestic demand</td><td>Long-weekend getaway push</td></tr>
+    </table></div></div>
+
+  <!-- GUIDE -->
+  <div class="view" id="v-guide"><div class="card"><h2>How to Use</h2>
+    <p class="k">
+    <b>Purpose:</b> a visual content planner across all JbB channels for 6 months, built around two priority segments and the platform's real booking rhythm.<br><br>
+    <b>Priority segments:</b> Seg 1 (Weekend Escapers &mdash; volume) and Seg 3 (Family Seekers &mdash; value). Seg 5 (Breadfast Loyalists) is the acquisition channel that carries both, threaded through owned channels.<br><br>
+    <b>The timing rule:</b> bookings peak Thursday (pre-weekend in Egypt). Promo/conversion content runs Wed&ndash;Thu; brand-story content runs Fri&ndash;Sun. Send SMS/push 7&ndash;9pm. Thursdays are marked with a star &#9733; on the grid.<br><br>
+    <b>Content direction:</b> evolve from generic memes to branded storytelling anchored to real destinations and real EGP prices. Default to domestic (Hurghada, Sharm, North Coast) and EGP.<br><br>
+    <b>Editing:</b> click any day to open it, add or edit items, choose a channel and segment for each. Use the segment filter to focus the view. Changes auto-save in this browser; use Export/Import .json to share with the team.
+    </p></div></div>
+</div>
+
+<!-- DRAWER -->
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dhead" style="position:relative">
+    <button class="x" onclick="closeDrawer()">&times;</button>
+    <h3 id="dtitle">Day</h3>
+    <div class="sub" id="dsub"></div>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</div>
+
+<script>
+const ICONS={
+ tiktok:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.3 2.1 1.6 3.7 3.8 4v2.7c-1.4 0-2.7-.4-3.8-1.1v5.7c0 3-2.4 5.5-5.4 5.5S5.2 17.3 5.2 14.3s2.4-5.5 5.4-5.5c.3 0 .6 0 .9.1v2.8c-.3-.1-.6-.2-.9-.2-1.5 0-2.7 1.2-2.7 2.8s1.2 2.8 2.7 2.8 2.7-1.2 2.7-2.8V3H16z"/></svg>',
+ instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
+ facebook:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V7c0-.8.2-1 1-1h2V3h-3c-2.2 0-3 1.5-3 3.5V9H9v3h2v9h3v-9h2.2l.4-3H14z"/></svg>',
+ sms:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>',
+ inapp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="10" y1="18" x2="14" y2="18"/></svg>',
+ email:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>'
+};
+const CHLABEL={tiktok:"TikTok",instagram:"Instagram",facebook:"Facebook",sms:"SMS",inapp:"In-App Banner",email:"Email / Newsletter"};
+const SEGLABEL={s1:"Seg 1 (Weekend)",s3:"Seg 3 (Family)",both:"Both / owned",s5:"Seg 5 (Ecosystem)"};
+const MONTHS=[
+ {y:2026,m:7,name:"August 2026",phase:"Quick Wins",theme:"Beat the heat / last-minute summer",hook:"Peak & late summer; North Coast peak"},
+ {y:2026,m:8,name:"September 2026",phase:"Quick Wins",theme:"Back-to-routine reset breaks",hook:"Back to school; shoulder season"},
+ {y:2026,m:9,name:"October 2026",phase:"Build",theme:"Autumn discovery / shoulder-season value",hook:"Cooler weather; cultural travel"},
+ {y:2026,m:10,name:"November 2026",phase:"Build",theme:"Plan-ahead winter & year-end trips",hook:"Year-end approaching; winter sun"},
+ {y:2026,m:11,name:"December 2026",phase:"Scale",theme:"Winter sun & year-end getaways",hook:"Winter holidays; Red Sea escapes"},
+ {y:2027,m:0,name:"January 2027",phase:"Scale",theme:"New year, new journeys",hook:"New Year; winter low season + Red Sea sun"},
+];
+const FESTIVALS={
+ "2026-10-06":"Armed Forces Day",
+ "2027-01-01":"New Year's Day",
+ "2027-01-07":"Coptic Christmas",
+ "2027-01-25":"Revolution / Police Day"
+};
+
+// seed templates per month index: {week, day, channel, seg, text}
+const D={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+const SEED=[
+ [ //Aug
+  {wk:1,day:"wed",ch:"inapp",seg:"s5",t:"'Travel with Journeys' summer Red Sea tile"},
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"Red Sea this weekend from EGP 2,500/night, book now (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: 48h in Hurghada under EGP 5,000"},
+  {wk:1,day:"sat",ch:"facebook",seg:"s3",t:"Family-friendly Red Sea resorts with kids' clubs"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Launch newsletter: 'Your summer starts here'"},
+  {wk:2,day:"thu",ch:"sms",seg:"s3",t:"Family summer package: 4 nights, EGP cap shown (8pm)"},
+  {wk:2,day:"thu",ch:"instagram",seg:"s1",t:"Reel: POV you booked a spontaneous beach trip"},
+  {wk:2,day:"sat",ch:"facebook",seg:"s3",t:"Why families trust Breadfast for travel"},
+  {wk:3,day:"thu",ch:"sms",seg:"s1",t:"15% code, mid-range cap, this weekend (8pm)"},
+  {wk:3,day:"sun",ch:"email",seg:"both",t:"Brand story: a real traveller's journey"},
+  {wk:4,day:"thu",ch:"sms",seg:"s1",t:"Last-chance urgency: offer ends tonight"},
+  {wk:4,day:"sat",ch:"facebook",seg:"s3",t:"North Coast all-inclusive for family of 4"},
+ ],
+ [ //Sep
+  {wk:1,day:"wed",ch:"inapp",seg:"s5",t:"Seg 5 onboarding: 'Why book travel with Breadfast'"},
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"Reset weekend, EGP price (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: one night away resets everything"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Newsletter: shoulder-season value picks"},
+  {wk:2,day:"thu",ch:"sms",seg:"s1",t:"15% code near-term weekend (8pm)"},
+  {wk:2,day:"sat",ch:"instagram",seg:"s1",t:"Brand story: slow weekend in Fayoum"},
+  {wk:3,day:"thu",ch:"sms",seg:"s3",t:"Family day-trip stays, EGP (8pm)"},
+  {wk:3,day:"sat",ch:"facebook",seg:"s3",t:"Calm family stays off-peak + free cancellation"},
+ ],
+ [ //Oct
+  {wk:1,day:"wed",ch:"inapp",seg:"s5",t:"Breadfast Pay tie-in: pay in EGP"},
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"Cooler-weather weekend deal (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: hidden domestic gem"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Newsletter launch: weekly top-5 stays"},
+  {wk:2,day:"thu",ch:"sms",seg:"both",t:"Armed Forces Day long-weekend getaway (8pm)"},
+  {wk:2,day:"sat",ch:"facebook",seg:"s3",t:"Family culture trip: Luxor / Aswan"},
+  {wk:3,day:"thu",ch:"sms",seg:"s1",t:"Autumn value weekend, 15% (8pm)"},
+  {wk:3,day:"sat",ch:"instagram",seg:"s1",t:"Carousel: autumn value stays"},
+ ],
+ [ //Nov
+  {wk:1,day:"wed",ch:"inapp",seg:"s5",t:"Loyalty points: 'earn on travel like groceries'"},
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"Weekend sun from EGP X (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: winter sun in the Red Sea"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Newsletter: winter-sun edit"},
+  {wk:2,day:"thu",ch:"sms",seg:"s3",t:"Plan the family winter break early (8pm)"},
+  {wk:2,day:"sat",ch:"facebook",seg:"s3",t:"Plan-ahead family winter packages"},
+  {wk:3,day:"sat",ch:"instagram",seg:"s1",t:"Carousel: warm escapes this winter"},
+ ],
+ [ //Dec
+  {wk:1,day:"wed",ch:"inapp",seg:"s5",t:"Gift voucher: Breadfast vouchers now usable on JbB"},
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"Year-end getaway deal (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: year-end Red Sea diving"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Newsletter: best of 2026 + gift vouchers"},
+  {wk:2,day:"thu",ch:"sms",seg:"s3",t:"Family winter holiday package (8pm)"},
+  {wk:2,day:"sat",ch:"facebook",seg:"s3",t:"Family winter holiday packages"},
+  {wk:3,day:"sat",ch:"instagram",seg:"s1",t:"Carousel: end the year by the sea"},
+ ],
+ [ //Jan
+  {wk:1,day:"thu",ch:"sms",seg:"s1",t:"New-year weekend sun (8pm)"},
+  {wk:1,day:"thu",ch:"tiktok",seg:"s1",t:"Reel: 'new year, first trip'"},
+  {wk:1,day:"fri",ch:"facebook",seg:"s3",t:"Family spring-break early planning"},
+  {wk:1,day:"sun",ch:"email",seg:"both",t:"Newsletter: 2027 travel intentions"},
+  {wk:2,day:"wed",ch:"inapp",seg:"s5",t:"Cross-vertical: premium grocery buyers get premium stays"},
+  {wk:2,day:"thu",ch:"sms",seg:"s1",t:"Weekend sun deal, 15% (8pm)"},
+  {wk:2,day:"sat",ch:"instagram",seg:"s1",t:"Carousel: start the year by the sea"},
+ ],
+];
+
+function nthWeekday(y,m,wd,n){ // n-th (1-based) occurrence of weekday wd in month m
+  let d=new Date(y,m,1),count=0;
+  while(d.getMonth()===m){ if(d.getDay()===wd){count++; if(count===n)return new Date(d);} d.setDate(d.getDate()+1);}
+  return null;
+}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+
+function buildSeed(){
+  const ev={};
+  MONTHS.forEach((mo,mi)=>{
+    (SEED[mi]||[]).forEach(s=>{
+      const date=nthWeekday(mo.y,mo.m,D[s.day],s.wk);
+      if(!date)return;
+      const key=ymd(date);
+      (ev[key]=ev[key]||[]).push({ch:s.ch,seg:s.seg,t:s.t});
+    });
+  });
+  return ev;
+}
+
+const KEY="jbb_visual_cal_v1";
+let state=load();
+let cur=0; // month index
+let filter={s1:true,s3:true,both:true,s5:true};
+
+function load(){try{const s=localStorage.getItem(KEY);if(s)return JSON.parse(s);}catch(e){}return {events:buildSeed()};}
+function saveNow(){try{localStorage.setItem(KEY,JSON.stringify(state));flash("Saved &#10003;");}catch(e){flash("Storage off");}}
+let tt=null;function autosave(){clearTimeout(tt);tt=setTimeout(saveNow,500);}
+function flash(m){const n=document.getElementById('savenote');n.innerHTML=m;setTimeout(()=>n.innerHTML="Auto-saved",1400);}
+
+// nav between views
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+b.dataset.v).classList.add('active');
+});
+// filters
+document.querySelectorAll('.fchip').forEach(c=>{
+  c.addEventListener('click',()=>{const s=c.dataset.seg;filter[s]=!filter[s];c.classList.toggle('off',!filter[s]);renderGrid();});
+});
+
+function phaseClass(p){return p==="Quick Wins"?"ph-qw":p==="Build"?"ph-build":"ph-scale";}
+
+function renderDOW(){
+  const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  document.getElementById('dow').innerHTML=days.map((d,i)=>`<div class="dow ${i===4?'thu':''}">${d}</div>`).join("");
+}
+function renderMeta(){
+  const mo=MONTHS[cur];
+  document.getElementById('mtitle').textContent=mo.name;
+  document.getElementById('monthmeta').innerHTML=
+    `<span class="phasebadge ${phaseClass(mo.phase)}">${mo.phase}</span>
+     <span class="theme"><b>Theme:</b> ${mo.theme}</span>
+     <span class="hook">${mo.hook}</span>`;
+}
+function renderGrid(){
+  const mo=MONTHS[cur];
+  const first=new Date(mo.y,mo.m,1);
+  const start=first.getDay();
+  const dim=new Date(mo.y,mo.m+1,0).getDate();
+  let cells="";
+  for(let i=0;i<start;i++)cells+=`<div class="day empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const date=new Date(mo.y,mo.m,d);const key=ymd(date);const dow=date.getDay();
+    const evs=(state.events[key]||[]).filter(e=>filter[e.seg]);
+    const fest=FESTIVALS[key];
+    let chips=evs.slice(0,3).map(e=>`<div class="evt seg-${e.seg}"><span style="color:var(--${e.seg==='s1'?'s1':e.seg==='s3'?'s3':e.seg==='s5'?'s5':'both'})">${ICONS[e.ch]}</span><span class="et">${esc(e.t)}</span></div>`).join("");
+    if(evs.length>3)chips+=`<div class="more">+${evs.length-3} more</div>`;
+    cells+=`<div class="day ${dow===4?'thu':''}" onclick="openDay('${key}')">
+      <div class="dn">${d}</div>
+      ${fest?`<div class="fest">${fest}</div>`:""}
+      ${chips}
+    </div>`;
+  }
+  document.getElementById('grid').innerHTML=cells;
+}
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function prevM(){if(cur>0){cur--;renderMeta();renderGrid();}}
+function nextM(){if(cur<MONTHS.length-1){cur++;renderMeta();renderGrid();}}
+
+// drawer
+let curKey=null;
+function openDay(key){
+  curKey=key;
+  const d=new Date(key);
+  const opts={weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('dtitle').textContent=d.toLocaleDateString('en-US',opts);
+  const fest=FESTIVALS[key];const dow=d.getDay();
+  document.getElementById('dsub').innerHTML=(dow===4?"&#9733; Thursday &mdash; peak booking day. ":"")+(fest?("Holiday: "+fest):"");
+  renderDrawer();
+  document.getElementById('scrim').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('scrim').classList.remove('open');document.getElementById('drawer').classList.remove('open');renderGrid();}
+function renderDrawer(){
+  const evs=state.events[curKey]||[];
+  let html=evs.map((e,i)=>`
+    <div class="item seg-${e.seg}">
+      <div class="row1">
+        <select onchange="upd(${i},'ch',this.value)">${Object.keys(CHLABEL).map(k=>`<option value="${k}" ${e.ch===k?'selected':''}>${CHLABEL[k]}</option>`).join("")}</select>
+        <select onchange="upd(${i},'seg',this.value)">${Object.keys(SEGLABEL).map(k=>`<option value="${k}" ${e.seg===k?'selected':''}>${SEGLABEL[k]}</option>`).join("")}</select>
+      </div>
+      <textarea class="txt" oninput="upd(${i},'t',this.value)">${esc(e.t)}</textarea>
+      <button class="del" onclick="delItem(${i})">Delete</button>
+      <div style="clear:both"></div>
+    </div>`).join("");
+  html+=`<button class="additem" onclick="addItem()">+ Add content item</button>`;
+  document.getElementById('dbody').innerHTML=html;
+}
+function upd(i,f,v){state.events[curKey][i][f]=v;if(f==='seg')renderDrawer();autosave();}
+function delItem(i){state.events[curKey].splice(i,1);if(!state.events[curKey].length)delete state.events[curKey];renderDrawer();autosave();}
+function addItem(){(state.events[curKey]=state.events[curKey]||[]).push({ch:"sms",seg:"both",t:""});renderDrawer();autosave();}
+
+function exportJSON(){const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download="JbB_Visual_Calendar.json";a.click();}
+function importJSON(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);renderGrid();saveNow();flash("Imported &#10003;");}catch(e){alert("Invalid file");}};r.readAsText(f);}
+function resetAll(){if(confirm("Reset all content to the default calendar? Your edits will be lost.")){state={events:buildSeed()};renderGrid();saveNow();flash("Reset");}}
+
+// roadmap table
+document.getElementById('roadmapTbl').innerHTML=`<table>
+ <tr><th>Month</th><th>Phase</th><th>Theme</th><th>Seasonal hook</th></tr>
+ ${MONTHS.map(m=>`<tr><td>${m.name}</td><td><span class="phasebadge ${phaseClass(m.phase)}">${m.phase}</span></td><td>${m.theme}</td><td>${m.hook}</td></tr>`).join("")}
+</table>`;
+
+renderDOW();renderMeta();renderGrid();
+</script>
+</body>
+</html>
