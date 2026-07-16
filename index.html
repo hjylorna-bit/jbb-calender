@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JbB Visual Content Calendar</title>
+<style>
+:root{
+  --teal:#0E7A63;--teal2:#0B5F4D;--teall:#149C7E;--tealink:#0E7A66;
+  --cream:#F5F7EC;--cream2:#FCFDF6;--paper:#EAF0E1;
+  --maroon:#7A4A42;--maroon2:#5E3730;--sage:#C3DBB4;--sage2:#B7D6A9;
+  --ink:#243027;--muted:#7C8A81;--line:#E1E7D6;
+  --we:#2E75B6;--web:#DCEBF8;
+  --bl:#B5306E;--blb:#FBE1EE;
+  --both:#B8860B;--bothb:#FBF1D4;
+  --leg:#8A9691;--legb:#ECEFEE;
+  --qw:#E4F2E6;--build:#FBF1D4;--scale:#FBE3D7;
+  --paid:#8a3b00;--paidb:#FBEADA;
+  --c-inapp:#0E7A63;--c-sms:#2E75B6;--c-search:#C9772F;--c-social:#B5306E;
+  --sh:0 14px 34px -14px rgba(11,95,77,.30);
+  --sh-sm:0 6px 16px -8px rgba(11,95,77,.32);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;position:relative}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:
+  radial-gradient(760px 460px at 88% -8%,rgba(20,156,126,.10),transparent 60%),
+  radial-gradient(680px 520px at -6% 108%,rgba(14,122,99,.09),transparent 60%);}
+@keyframes floatUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+header.top{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;padding:16px 26px;position:sticky;top:0;z-index:60;box-shadow:0 6px 22px -8px rgba(11,95,77,.5);overflow:hidden}
+header.top .motif{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+header.top h1{margin:0;font-size:21px;letter-spacing:.2px;position:relative}
+header.top p{margin:3px 0 0;font-size:12px;opacity:.9;position:relative;max-width:980px}
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;position:relative}
+.nav button{background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:9px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s}
+.nav button:hover{background:rgba(255,255,255,.26)}
+.nav button.active{background:var(--cream2);color:var(--teal2);box-shadow:var(--sh-sm)}
+.tools{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:11px;position:relative}
+.tools button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);border-radius:9px;padding:6px 13px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}
+.tools button:hover{background:rgba(255,255,255,.15)}
+.note{font-size:11.5px;opacity:.9;margin-left:auto}
+.wrap{max-width:1200px;margin:0 auto;padding:22px 16px 90px}
+.view{display:none}.view.active{display:block;animation:floatUp .32s ease both}
+
+.calbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:14px}
+.mnav{display:flex;align-items:center;gap:10px}
+.mnav button{background:var(--cream2);border:1px solid var(--line);border-radius:11px;width:38px;height:38px;font-size:17px;cursor:pointer;color:var(--teal);box-shadow:var(--sh-sm);transition:.15s}
+.mnav button:hover{transform:translateY(-1px)}
+.mnav .mtitle{font-size:19px;font-weight:800;color:var(--teal2);min-width:158px;text-align:center}
+.filters{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.filters .lbl{font-size:11.5px;color:var(--muted);font-weight:700}
+.fchip{border:1.5px solid var(--line);background:var(--cream2);border-radius:22px;padding:5px 12px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none;box-shadow:var(--sh-sm);transition:.15s}
+.fchip:hover{transform:translateY(-1px)}
+.fchip .dot{width:11px;height:11px;border-radius:4px}
+.fchip.off{opacity:.4;box-shadow:none}
+
+.monthmeta{background:var(--cream2);border:1px solid var(--line);border-left:7px solid var(--teal);border-radius:18px;padding:14px 18px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;box-shadow:var(--sh)}
+.bigphase{font-style:italic;font-weight:800;font-size:20px;color:var(--teal);letter-spacing:.3px}
+.phasebadge{padding:4px 12px;border-radius:22px;font-size:11px;font-weight:800}
+.ph-qw{background:var(--qw);color:#0E7A63}.ph-build{background:var(--build);color:#8a6d00}.ph-scale{background:var(--scale);color:#a8431f}
+.monthmeta .call{font-size:13px;font-weight:800;color:var(--maroon2)}
+.monthmeta .hook{font-size:11.5px;font-weight:700;color:var(--teal2);background:var(--qw);border:1px solid #bfe3ce;border-radius:22px;padding:4px 12px}
+.monthmeta .budget{margin-left:auto;font-size:12px;font-weight:800;color:var(--paid);background:var(--paidb);border:1px solid #f0cba6;border-radius:22px;padding:5px 13px}
+.monthmeta .budget.zero{color:var(--teal2);background:var(--qw);border-color:#bfe3ce}
+
+.board{background:linear-gradient(158deg,var(--teal),var(--teal2));border-radius:24px;padding:16px 16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.board .motif{position:absolute;inset:0;pointer-events:none;opacity:.9;z-index:0}
+.cadence{position:relative;z-index:1;color:rgba(255,255,255,.9);font-size:11px;font-weight:600;margin:0 2px 10px;display:flex;flex-wrap:wrap;gap:6px 16px}
+.cadence b{color:#CFF0DC}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;position:relative;z-index:1}
+.dow{text-align:center;font-size:11px;font-weight:800;color:rgba(255,255,255,.82);padding:3px 0;letter-spacing:.4px}
+.dow.thu{color:#CFF0DC}
+.day{background:var(--cream2);border:1px solid rgba(255,255,255,.5);border-radius:15px;min-height:120px;padding:7px 8px;cursor:pointer;transition:transform .16s,box-shadow .16s;position:relative;overflow:hidden;box-shadow:var(--sh-sm);animation:floatUp .3s ease both}
+.day:hover{transform:translateY(-3px);box-shadow:0 16px 30px -12px rgba(0,0,0,.35)}
+.day.empty{background:transparent;border:none;cursor:default;box-shadow:none;animation:none}
+.day.thu{background:#F3FAF3}
+.day .dn{font-size:13px;font-weight:800;color:var(--teal2)}
+.day.thu .dn::after{content:" \2605";color:var(--teal);font-size:9px}
+.day .fest{font-size:9.5px;background:#fdf3e7;color:#a8431f;border:1px solid #f3d9bd;border-radius:11px;padding:1px 7px;display:inline-block;margin-top:2px;line-height:1.5}
+.evt{margin-top:5px;font-size:10.5px;border-radius:8px;padding:4px 6px;display:flex;gap:5px;align-items:flex-start;border-left:3px solid #ccc;background:#f7f9f8;box-shadow:0 2px 6px -3px rgba(0,0,0,.25);transition:.14s}
+.evt:hover{transform:translateY(-1px)}
+.evt svg{width:12px;height:12px;flex:0 0 12px;margin-top:1px}
+.etw{min-width:0;flex:1}
+.evt .et{line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.evt .tm{display:block;font-size:8.5px;font-weight:700;color:var(--teal2);opacity:.75;margin-top:1px}
+.evt .cb{flex:0 0 auto;font-size:8.5px;font-weight:800;color:#fff;background:var(--paid);border-radius:9px;padding:0 6px;line-height:1.6;align-self:flex-start;white-space:nowrap}
+.more{font-size:9.5px;color:var(--teal2);font-weight:700;margin-top:4px}
+.seg-we{background:var(--web);border-left-color:var(--we)}
+.seg-bl{background:var(--blb);border-left-color:var(--bl)}
+.seg-both{background:var(--bothb);border-left-color:var(--both)}
+.seg-leg{background:var(--legb);border-left-color:var(--leg);border-left-style:dashed}
+
+.scrim{position:fixed;inset:0;background:rgba(11,60,49,.4);z-index:80;display:none;backdrop-filter:blur(2px)}
+.scrim.open{display:block}
+.drawer{position:fixed;top:0;right:-540px;width:500px;max-width:95vw;height:100%;background:var(--cream2);z-index:90;box-shadow:-8px 0 40px rgba(0,0,0,.25);transition:right .24s;display:flex;flex-direction:column}
+.drawer.open{right:0}
+.dhead{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;padding:18px 20px;position:relative}
+.dhead h3{margin:0;font-size:17px}.dhead .sub{font-size:12px;opacity:.9;margin-top:3px}
+.dhead .x{position:absolute;top:15px;right:17px;cursor:pointer;font-size:21px;color:#fff;background:none;border:none}
+.dbody{padding:14px 16px;overflow-y:auto;flex:1}
+.item{border:1px solid var(--line);border-left-width:9px;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:var(--sh-sm)}
+.item.seg-we{background:linear-gradient(100deg,#EAF3FC,#fff 62%);border-left-color:var(--we)}
+.item.seg-bl{background:linear-gradient(100deg,#FCEAF3,#fff 62%);border-left-color:var(--bl)}
+.item.seg-both{background:linear-gradient(100deg,#FCF6E2,#fff 62%);border-left-color:var(--both)}
+.item.seg-leg{background:linear-gradient(100deg,#EEF1F0,#fff 62%);border-left-color:var(--leg);border-left-style:dashed}
+.segchip{display:inline-block;font-size:11px;font-weight:800;color:#fff;border-radius:20px;padding:3px 12px;margin-bottom:9px;box-shadow:var(--sh-sm)}
+.sc-we{background:var(--we)}.sc-bl{background:var(--bl)}.sc-both{background:var(--both)}.sc-leg{background:var(--leg)}
+.item .grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.item select,.item input,.item textarea{font-family:inherit}
+.item select{width:100%;font-size:11.5px;padding:6px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.fl{font-size:10.5px;font-weight:700;color:var(--muted);margin:7px 0 2px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.item .txt{width:100%;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:8px;resize:vertical;min-height:44px;background:#fff}
+.item .txt.ex{min-height:72px}
+.item .row2{display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap}
+.item .row2 label{font-size:11px;color:var(--muted);font-weight:700}
+.item .tin{flex:1;min-width:120px;font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.item .cost{width:82px;font-size:12px;padding:6px 8px;border:1px solid var(--line);border-radius:8px}
+.item .del{background:#fbe3e0;color:#a8431f;border:none;border-radius:8px;padding:5px 10px;font-size:11px;cursor:pointer;margin-left:auto}
+.additem{width:100%;background:var(--qw);color:var(--teal2);border:1.5px dashed var(--teal);border-radius:12px;padding:11px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s}
+.additem:hover{background:#d8eed9;transform:translateY(-1px)}
+
+.card{background:var(--cream2);border:1px solid var(--line);border-radius:22px;padding:20px 22px;margin-bottom:18px;box-shadow:var(--sh);transition:transform .18s,box-shadow .18s}
+.card:hover{transform:translateY(-3px);box-shadow:0 22px 44px -16px rgba(11,95,77,.34)}
+.card h2{margin:0 0 6px;font-size:17px;color:var(--teal2);display:flex;align-items:center;gap:10px}
+.card h2::before{content:"";width:16px;height:16px;border-radius:6px;background:linear-gradient(135deg,var(--teal),var(--teall));box-shadow:var(--sh-sm)}
+.card h3{margin:16px 0 8px;font-size:13.5px;color:var(--teal)}
+.lead{font-size:12.5px;line-height:1.7;color:var(--maroon2);margin:6px 0 12px}
+table{border-collapse:separate;border-spacing:0;width:100%;overflow:hidden;border-radius:12px;box-shadow:var(--sh-sm);table-layout:fixed}
+th,td{border-bottom:1px solid var(--line);padding:9px 11px;font-size:12.5px;text-align:left;vertical-align:top;background:#fff;word-wrap:break-word;overflow-wrap:anywhere}
+th{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:700;border-bottom:none}
+tr:last-child td{border-bottom:none}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td input,td select,td textarea{width:100%;border:1px solid var(--line);border-radius:7px;padding:6px 7px;font-size:12px;font-family:inherit;background:#fff}
+td textarea{resize:vertical;min-height:40px;line-height:1.35}
+td input.num{text-align:right}
+.trow-btn{background:var(--qw);color:var(--teal2);border:1.5px dashed var(--teal);border-radius:10px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-top:10px}
+.delrow{background:#fbe3e0;color:#a8431f;border:none;border-radius:7px;padding:4px 9px;font-size:11px;cursor:pointer;width:auto}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;border-radius:22px;padding:2px 10px}
+.tag.we{background:var(--web);color:var(--we)}
+.tag.bl{background:var(--blb);color:var(--bl)}
+.tag.both{background:var(--bothb);color:#8a6d00}
+.tag.leg{background:var(--legb);color:#5f6b66}
+.tag.t1{background:#d7ecd7;color:#0E7A63}.tag.t2{background:#cfe0f4;color:#1b3a5c}.tag.t3{background:#f6ddcb;color:#a8431f}
+.tg{font-weight:700;border:none!important}
+.tg-Conversion{background:#d7ecd7;color:#0E7A63}
+.tg-Awareness{background:var(--build);color:#8a6d00}
+.tg-Engagement{background:var(--blb);color:var(--bl)}
+.tg-Traffic{background:var(--web);color:var(--we)}
+.tg-Discovery{background:#e6dcf5;color:#5E3EA3}
+.tg-Retention{background:#dcebe4;color:#2E5FA3}
+.mv-keep{background:var(--qw);color:var(--teal2)}
+.mv-grow{background:var(--paidb);color:var(--paid)}
+.mv-cut{background:#fbe3e0;color:#a8431f}
+.k{font-size:12.5px;line-height:1.7;color:var(--maroon2)}
+.k b{color:var(--teal2)}
+.callout{background:var(--qw);border:1px solid #bfe3ce;border-left:5px solid var(--teal);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin:10px 0;color:var(--maroon2)}
+.callout.warn{background:#fdf3e7;border-color:#f3d9bd;border-left-color:#c9772f}
+
+/* brand pillar cards */
+.bpgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.bp{background:#fff;border:1px solid var(--line);border-top:6px solid var(--cc,var(--teal));border-radius:18px;padding:16px 16px 14px;box-shadow:var(--sh-sm);transition:.16s}
+.bp:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.bp .bph{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.bp .bpnum{width:30px;height:30px;flex:0 0 30px;border-radius:9px;background:var(--cc,var(--teal));color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;box-shadow:var(--sh-sm)}
+.bp .bptitle{font-weight:800;font-size:15px;color:var(--teal2);border:none;background:transparent;width:100%;padding:2px 0}
+.bp .bptags{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.bp .lab{font-size:10.5px;font-weight:800;color:var(--teal);text-transform:uppercase;letter-spacing:.5px;margin-top:11px;display:block}
+.bp .emo{width:100%;font-style:italic;font-size:13px;color:var(--maroon2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fbfdf8;margin-top:3px}
+.bp textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-family:inherit;font-size:12px;line-height:1.5;color:var(--maroon2);resize:vertical;margin-top:3px}
+.bp .goal{min-height:52px}.bp .aven{min-height:120px}
+.bp .avhint{font-size:10px;color:var(--muted);margin-top:2px}
+
+.hookgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.hook{border-radius:18px;overflow:hidden;box-shadow:var(--sh-sm);background:#fff;border:1px solid var(--line);transition:.16s}
+.hook:hover{transform:translateY(-4px);box-shadow:var(--sh)}
+.hook .hh{padding:16px 15px 12px;color:#fff;display:flex;align-items:center;gap:12px}
+.hook .hi{font-size:30px;filter:drop-shadow(0 3px 5px rgba(0,0,0,.22))}
+.hook .hw{font-weight:800;font-size:15px}
+.hook .ho{font-size:11px;opacity:.92;margin-top:1px}
+.hook .hb{padding:12px 15px 15px}
+.hook .hb .r{font-size:11.5px;line-height:1.5;margin-bottom:7px;color:var(--maroon2)}
+.hook .hb .r b{color:var(--teal2)}
+.h-summer .hh{background:linear-gradient(135deg,#E9A23B,#D9822B)}
+.h-school .hh{background:linear-gradient(135deg,#3B9AE9,#2E75B6)}
+.h-holiday .hh{background:linear-gradient(135deg,#0E7A63,#0B5F4D)}
+.h-autumn .hh{background:linear-gradient(135deg,#C9772F,#A8431f)}
+.h-winter .hh{background:linear-gradient(135deg,#4E8CC9,#2E5FA3)}
+.h-new .hh{background:linear-gradient(135deg,#B5306E,#8a2352)}
+.h-copt .hh{background:linear-gradient(135deg,#8A6BC9,#5E3EA3)}
+.h-rev .hh{background:linear-gradient(135deg,#C24B4B,#8a2b2b)}
+
+@media print{.nav,.tools,.calbar .filters,.note,.scrim,.drawer{display:none!important}.day{min-height:92px}.card,.day,.hook,.bp{box-shadow:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <svg class="motif" viewBox="0 0 1400 200" preserveAspectRatio="none"><path d="M-50,120 C220,20 420,180 700,100 S1120,20 1460,120" stroke="rgba(195,219,180,.30)" stroke-width="46" fill="none" stroke-linecap="round"/></svg>
+  <h1>Journeys by Breadfast &mdash; Visual Content Calendar</h1>
+  <p>Aug 2026 &ndash; Jan 2027 &middot; Two segments + your existing campaigns &middot; Sequenced to the six-month tier plan &middot; Click any day to edit copy, timing &amp; spend. Auto-saves in this browser.</p>
+  <div class="nav" id="nav">
+    <button data-v="calendar" class="active">&#128197; Calendar</button>
+    <button data-v="roadmap">&#128506; Roadmap &amp; Tiers</button>
+    <button data-v="pp">&#128226; Playbook &amp; Pillars</button>
+    <button data-v="budget">&#128176; Budget</button>
+    <button data-v="hooks">&#127881; Seasonal Hooks</button>
+    <button data-v="guide">&#8505; Guide</button>
+  </div>
+  <div class="tools">
+    <button onclick="saveNow()">Save</button>
+    <button onclick="exportJSON()">Export .json</button>
+    <button onclick="document.getElementById('imp').click()">Import</button>
+    <input id="imp" type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button onclick="window.print()">Print / PDF</button>
+    <button onclick="resetAll()">Reset</button>
+    <span class="note" id="savenote">Loaded</span>
+  </div>
+</header>
+
+<datalist id="times">
+  <option>8:00 PM</option><option>9:00 PM</option><option>7:00 PM</option><option>6:00 PM</option>
+  <option>1:00 PM</option><option>12:00 PM</option><option>Wed&ndash;Thu 7&ndash;9pm</option>
+  <option>All day</option><option>Always-on (capped)</option>
+</datalist>
+
+<div class="wrap">
+  <div class="view active" id="v-calendar">
+    <div class="calbar">
+      <div class="mnav">
+        <button onclick="prevM()">&#8249;</button>
+        <span class="mtitle" id="mtitle"></span>
+        <button onclick="nextM()">&#8250;</button>
+      </div>
+      <div class="filters">
+        <span class="lbl">Show:</span>
+        <span class="fchip" data-seg="we"><span class="dot" style="background:var(--we)"></span>Weekend Escaper</span>
+        <span class="fchip" data-seg="bl"><span class="dot" style="background:var(--bl)"></span>Breadfast Loyalist</span>
+        <span class="fchip" data-seg="both"><span class="dot" style="background:var(--both)"></span>Both / owned</span>
+        <span class="fchip" data-seg="leg"><span class="dot" style="background:var(--leg)"></span>Existing campaigns</span>
+      </div>
+    </div>
+    <div class="monthmeta" id="monthmeta"></div>
+    <div class="board">
+      <svg class="motif" viewBox="0 0 1000 700" preserveAspectRatio="none"><path d="M-40,140 C260,20 420,300 700,180 S1050,90 1120,340 C980,520 620,420 420,560 S120,660 -60,560" stroke="rgba(195,219,180,.16)" stroke-width="70" fill="none" stroke-linecap="round"/></svg>
+      <div class="cadence"><span>Existing social cadence carried forward:</span><span><b>Facebook</b> 3&ndash;4/wk, family-led</span><span><b>Instagram</b> 3&ndash;4 Reels/wk, EGP overlays</span><span><b>TikTok</b> 4&ndash;5/wk, cross-post</span><span>(sampled on the calendar &mdash; filter to isolate)</span></div>
+      <div class="grid" id="dow"></div>
+      <div class="grid" id="grid" style="margin-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-roadmap">
+    <div class="card"><h2>Tier plan &mdash; a sequence, not a menu</h2>
+      <p class="lead">Fund the owned channels first (zero cost, strongest evidence). Search earns a capped pilot. Social is held until organic proves out. Do not fund a later tier ahead of earlier-tier results.</p>
+      <table style="table-layout:auto">
+        <tr><th>Tier</th><th>Window</th><th>Channel</th><th>Call</th><th>Why this position</th></tr>
+        <tr><td><span class="tag t1">Tier 1</span></td><td>M1&ndash;M6</td><td>In-App &amp; Homepage, SMS</td><td>Fund now</td><td>Owned, zero marginal cost. In-App carries 58% of visits at the worst conversion in the funnel &mdash; the single largest lever. SMS needs retiming, not a rebuild, so return arrives fastest.</td></tr>
+        <tr><td><span class="tag t2">Tier 2</span></td><td>M2&ndash;M4</td><td>Search (organic + capped paid pilot)</td><td>Pilot, capped</td><td>Converts at 3.18%, 27&times; In-App, at zero existing spend. A low-risk reallocation &mdash; but the message must be validated on owned channels first.</td></tr>
+        <tr><td><span class="tag t3">Tier 3</span></td><td>M4&ndash;M5 (contingent)</td><td>Social (organic only, one platform)</td><td>Test, no paid spend</td><td>The one paid awareness campaign produced zero bookings. Hold incremental paid until organic proves the localised positioning resonates.</td></tr>
+      </table>
+    </div>
+    <div class="card"><h2>Six-month sequence</h2><div id="roadmapTbl"></div></div>
+  </div>
+
+  <div class="view" id="v-pp">
+    <div class="card"><h2>Channel Playbook</h2>
+      <p class="lead">Every item on the calendar carries the same schema as your sprint sheet: channel, asset type, organic/paid, language, objective, publish time, budget. New strategic events are coloured by segment; your existing campaigns run in grey.</p>
+      <table><tr><th style="width:19%">Channel</th><th style="width:8%">Tier</th><th style="width:13%">Segment</th><th style="width:32%">Verdict &amp; actions (from the deck)</th><th style="width:28%">Content pillars</th></tr>
+      <tr><td><b>In-App &amp; Homepage</b></td><td><span class="tag t1">1</span></td><td><span class="tag bl">Loyalist</span></td><td>State the Journeys' benefit before asking for the booking. Wks 1&ndash;2 rewrite banner around one Breadfast benefit + move CTA up; Wks 2&ndash;4 reassurance copy at handoff + <b>place AI-assisted booking entry centrally</b>; Wks 4&ndash;6 one Loyalist cross-sell test + <b>launch weekly editorial newsletter</b> ("Top 5 domestic stays").</td><td>One Breadfast benefit; AI booking entry on homepage; reassurance at handoff; weekly editorial newsletter</td></tr>
+      <tr><td><b>SMS</b></td><td><span class="tag t1">1</span></td><td><span class="tag both">Both</span></td><td>Retime the send, keep building awareness. Thursday books at 2&times;. Wk 1 re-segment into one conversion window; Wks 1&ndash;4 Thursday-only urgency, EGP + deadline; Wks 4&ndash;8 add Loyalist track once M2 shows capacity. <b>A 15% discount is the sweet spot</b> &mdash; deeper discounts underperform on confirmation.</td><td>Retimed Thursday conversion send (EGP + deadline, 15% sweet spot); Loyalist track (Breadfast Pay, gift vouchers) in phase two</td></tr>
+      <tr><td><b>Search</b></td><td><span class="tag t2">2</span></td><td><span class="tag both">Both</span></td><td>Earn the comparison moment before paying for it. Wks 4&ndash;5 build 1&ndash;2 destination pages on top segments; Wks 5&ndash;8 capped paid pilot on comparison keywords only; Wk 8 review vs the 3.18% organic benchmark + build SEO/GEO pages by destination.</td><td>Comparison keywords (EGP + zero-FX); 1&ndash;2 destination pages; SEO/GEO "best local hotel booking app Cairo"</td></tr>
+      <tr><td><b>Social</b></td><td><span class="tag t3">3</span></td><td><span class="tag we">Weekend</span></td><td>Prove the message works before paying to scale it. 60/40 weekly split (promo Wed&ndash;Thu, brand story Fri&ndash;Sun); Months 4&ndash;5 run locally specific, real-price content on <b>one lead platform only</b>; Month 5 track engagement vs the existing discount-led benchmark; Month 6 decide.</td><td>The four brand pillars below, led by real EGP prices &mdash; no new paid spend this cycle</td></tr>
+      </table>
+      <div class="callout">Existing campaign cadence carried forward: <b>Facebook</b> 3&ndash;4 posts/wk (bilingual, family-led) &middot; <b>Instagram</b> 3&ndash;4 Reels/wk (EGP price overlays) &middot; <b>TikTok</b> 4&ndash;5/wk (cross-posted). Shown in grey on the calendar so cadence isn't lost while the strategic layer is tested.</div>
+    </div>
+
+    <div class="card"><h2>Content Pillars &mdash; the brand narrative</h2>
+      <p class="lead">Four pillars move a customer from "why does Breadfast do travel?" to "when's the next trip?". Each pillar leads with a core emotion, a goal, and the content avenues that feed it. Everything here is editable.</p>
+      <div class="bpgrid" id="brandPillars"></div>
+    </div>
+
+    <div class="card"><h2>Month-6 decision rules</h2>
+      <p class="lead">At the gate, each channel is judged against a pre-set expectation &mdash; cut what didn't work, scale what did.</p>
+      <table style="table-layout:auto"><tr><th>Channel</th><th>Expect by</th><th>If it works</th><th>If it doesn't</th></tr>
+      <tr><td>In-App</td><td>M2: 22pp collapse narrows</td><td>Keep + add one cross-sell test</td><td>Escalate USD&ndash;EGP mismatch as a product fix, not a marketing target</td></tr>
+      <tr><td>SMS</td><td>4&ndash;6 wks: visible volume lift</td><td>Add discovery + Loyalist tracks</td><td>Drop the send-time hypothesis, don't defend it</td></tr>
+      <tr><td>Search</td><td>Wk 8: pilot vs 3.18% benchmark</td><td>Expand budget next cycle</td><td>Hold paid search; organic strength may not transfer</td></tr>
+      <tr><td>Social</td><td>M5: engagement vs existing-campaign benchmark</td><td>Release paid or add a platform</td><td>Hold paid social again &mdash; don't fund out of habit</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="view" id="v-budget">
+    <div class="card"><h2>Then vs now &mdash; discipline replaces scatter</h2>
+      <p class="lead">Across sprints MS7&ndash;9, paid spend was scattered across paid social, an influencer post, and billboards &mdash; and the one paid awareness video produced <b>zero bookings</b>. The new plan holds paid social entirely and gives Search a single capped pilot. Adjust any figure to match your finance records.</p>
+      <div id="histTbl"></div>
+      <div class="callout warn">The awareness video and billboards drove reach, not bookings. That is the spend the new plan reallocates away from.</div>
+    </div>
+    <div class="card"><h2>New plan &mdash; where money goes now</h2>
+      <div id="newplanTbl"></div>
+      <h3>Capped Search pilot by month (auto-totalled from the calendar)</h3>
+      <div id="budgetTbl"></div>
+    </div>
+  </div>
+
+  <div class="view" id="v-hooks"><div class="card"><h2>Seasonal Hooks &amp; Festivals (Aug 2026 &ndash; Jan 2027)</h2>
+    <p class="lead">Fixed national holidays are marked on the calendar with an icon. Confirm shifting Islamic dates each year &mdash; they move ~11 days earlier annually.</p>
+    <div class="hookgrid" id="hookGrid"></div>
+  </div></div>
+
+  <div class="view" id="v-guide"><div class="card"><h2>How to Use</h2>
+    <p class="k">
+    <b>Two layers, colour-coded.</b> The <span style="color:var(--we);font-weight:700">Weekend Escaper</span> and <span style="color:var(--bl);font-weight:700">Breadfast Loyalist</span> events (plus gold "Both / owned") are the strategic layer. The <span style="color:#5f6b66;font-weight:700">grey dashed</span> items are your <b>existing campaigns and scheduled posts</b>, carried forward at their real cadence. Use the filter chips to isolate the new work from what's already running.<br><br>
+    <b>Every item has a concrete example.</b> Click a day to set channel, asset type, organic/paid, language, objective, <b>publish time</b>, budget, a short calendar label, and an <b>example / copy</b> field (the actual SMS text, the caption, or the in-app operation). Hover a calendar chip to preview its metadata.<br><br>
+    <b>The plan is a sequence.</b> In-App + SMS run all six months at $0 (banner, AI booking entry and the weekly newsletter are content-only). Search gets a capped paid pilot (M2&ndash;M4). Social is an organic-only test on one platform (Instagram, M4&ndash;M5), led by the four brand pillars. Month 6 is a decision gate.<br><br>
+    <b>Adjustable references.</b> The Budget tables and the four brand pillars can all be changed and persist in this browser. Use Export/Import .json to share a version with the team.<br><br>
+    <b>The timing rule:</b> bookings peak Thursday (marked &#9733;). Conversion content runs Wed&ndash;Thu 7&ndash;9pm; brand-story runs Fri&ndash;Sun.
+    </p></div></div>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dhead">
+    <button class="x" onclick="closeDrawer()">&times;</button>
+    <h3 id="dtitle">Day</h3>
+    <div class="sub" id="dsub"></div>
+  </div>
+  <div class="dbody" id="dbody"></div>
+</div>
+
+<script>
+const ICONS={
+ tiktok:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.3 2.1 1.6 3.7 3.8 4v2.7c-1.4 0-2.7-.4-3.8-1.1v5.7c0 3-2.4 5.5-5.4 5.5S5.2 17.3 5.2 14.3s2.4-5.5 5.4-5.5c.3 0 .6 0 .9.1v2.8c-.3-.1-.6-.2-.9-.2-1.5 0-2.7 1.2-2.7 2.8s1.2 2.8 2.7 2.8 2.7-1.2 2.7-2.8V3H16z"/></svg>',
+ instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
+ facebook:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 9V7c0-.8.2-1 1-1h2V3h-3c-2.2 0-3 1.5-3 3.5V9H9v3h2v9h3v-9h2.2l.4-3H14z"/></svg>',
+ sms:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l1-4.5A8 8 0 1 1 21 12z"/></svg>',
+ inapp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2" width="12" height="20" rx="3"/><line x1="10" y1="18" x2="14" y2="18"/></svg>',
+ search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>',
+ email:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>',
+ social:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
+ popup:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="2"/><line x1="4" y1="10" x2="20" y2="10"/></svg>',
+ story:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/><circle cx="12" cy="12" r="3.5"/></svg>'
+};
+const CHLABEL={inapp:"In-App Banner",sms:"SMS",search:"Search (Paid/SEO)",email:"Editorial Newsletter",instagram:"Instagram",tiktok:"TikTok",facebook:"Facebook",popup:"Pop-Up",story:"IG Story"};
+const SEGLABEL={we:"Weekend Escaper",bl:"Breadfast Loyalist",both:"Both / owned",leg:"Existing campaigns"};
+const SEGVAR={we:"we",bl:"bl",both:"both",leg:"leg"};
+const ASSETS=["Static Image","Video","Carousel","Text","Landing Page","Newsletter","Pop-Up","Story"];
+const TYPES=["Organic","Paid"];
+const LANGS=["Both (EN+AR)","English","Arabic"];
+const OBJS=["Conversion","Traffic","Awareness","Engagement","Discovery","Retention"];
+const MOVEL={keep:"Keep",grow:"Grow",cut:"Cut"};
+
+const MONTHS=[
+ {y:2026,m:7,name:"August 2026",phase:"Quick Wins",call:"M1 &middot; Fund now: In-App + SMS",hook:"Peak & late summer; North Coast peak"},
+ {y:2026,m:8,name:"September 2026",phase:"Quick Wins",call:"M2 &middot; AI entry + newsletter; build Search pages",hook:"Back to school; shoulder season"},
+ {y:2026,m:9,name:"October 2026",phase:"Build",call:"M3 &middot; Search: capped paid pilot",hook:"Cooler weather; Armed Forces Day long weekend"},
+ {y:2026,m:10,name:"November 2026",phase:"Build",call:"M4 &middot; Search review + Social organic test begins",hook:"Year-end approaching; winter sun"},
+ {y:2026,m:11,name:"December 2026",phase:"Scale",call:"M5 &middot; Social organic (1 platform); Loyalist test",hook:"Winter holidays; Red Sea escapes"},
+ {y:2027,m:0,name:"January 2027",phase:"Scale",call:"M6 &middot; Decision gate: cut / scale all four",hook:"New Year; long-weekend demand"},
+];
+const FESTIVALS={
+ "2026-10-06":"\uD83C\uDF96\uFE0F Armed Forces Day",
+ "2027-01-01":"\uD83C\uDF86 New Year's Day",
+ "2027-01-07":"\u271D\uFE0F Coptic Christmas",
+ "2027-01-25":"\uD83D\uDEA9 Revolution / Police Day"
+};
+const HOOKS=[
+ {cls:"h-summer",ic:"\uD83C\uDFD6\uFE0F",w:"August",o:"Peak & late summer · North Coast peak",beh:"Weekend & short beach trips dominate",ang:"Red Sea & North Coast weekend escapes + first-time nudges"},
+ {cls:"h-school",ic:"\uD83C\uDF92",w:"September",o:"Back to school",beh:"Travel slows; short adult-only breaks",ang:"'Reset' weekend breaks; explain the Breadfast travel benefit"},
+ {cls:"h-holiday",ic:"\uD83C\uDF96\uFE0F",w:"Oct 6",o:"Armed Forces Day (national holiday)",beh:"Long-weekend domestic demand",ang:"Long-weekend push; own the comparison search"},
+ {cls:"h-autumn",ic:"\uD83C\uDF42",w:"November",o:"Year-end approaching · winter sun",beh:"Advance planning for winter",ang:"Plan-ahead + weekend sun; begin the organic social test"},
+ {cls:"h-winter",ic:"\u2744\uFE0F",w:"December",o:"Winter holidays · Red Sea escapes",beh:"Winter-sun & year-end trips",ang:"Winter-sun + gift-voucher mechanic"},
+ {cls:"h-new",ic:"\uD83C\uDF86",w:"Jan 1",o:"New Year's Day",beh:"'New year, new journeys' intent",ang:"Fresh-start weekend escapes"},
+ {cls:"h-copt",ic:"\u271D\uFE0F",w:"Jan 7",o:"Coptic Christmas (national holiday)",beh:"Family gatherings + short trips",ang:"Winter-break stays"},
+ {cls:"h-rev",ic:"\uD83D\uDEA9",w:"Jan 25",o:"Revolution / Police Day (holiday)",beh:"Long-weekend domestic demand",ang:"Long-weekend getaway push"}
+];
+
+const D={sun:0,mon:1,tue:2,wed:3,thu:4,fri:5,sat:6};
+const SEED=[
+ [ // AUGUST — M1 Fund now: In-App + SMS ($0); existing social continues at real cadence
+  {wk:1,day:"tue",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Rewrite banner: ONE Breadfast benefit; move CTA up",ex:"Replace hero banner headline with one benefit tile: 'Pay in EGP · Breadfast-backed · instant confirmation'. Move the 'Explore stays' button above the fold."},
+  {wk:1,day:"wed",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Route homepage to the Weekend Escape collection",ex:"Set the homepage hero to open the 'Weekend Escapes under EGP 3,000' collection instead of a generic promo-code field."},
+  {wk:1,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Retimed conversion send: 15% off, EGP + Thu deadline",ex:"EN: 'Weekend escape? Red Sea from EGP 2,500 — 15% off, no FX fees. Ends Thu 11pm → [link]'  |  AR: 'هروب نهاية الأسبوع؟ البحر الأحمر من 2,500ج، خصم 15% وبدون رسوم تحويل. العرض يخلص الخميس 11م → [link]'  (15% is the sweet spot — deeper discounts underperform.)"},
+  {wk:1,day:"sat",ch:"instagram",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"1:00 PM",t:"Existing IG Reel (EGP overlay): 'Which Traveler Are You?'",ex:"Reel with EGP price overlay. Caption: 'We're all a little bit of these! Tag your friend and tell them which one they are.'"},
+  {wk:1,day:"sun",ch:"facebook",seg:"leg",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): 'A weekend the whole family will love'",ex:"Family-led framing. Caption: 'Short trips, big memories — family stays that won't break the budget.'"},
+  {wk:1,day:"wed",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'POV: you travel too well'",ex:"Cross-posted from Breadfast. Trending audio, minimal caption."},
+  {wk:2,day:"tue",ch:"inapp",seg:"we",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Homepage tile: 'This weekend' EGP-priced stays row",ex:"Add a scrollable 'This weekend from EGP 2,500' row of 6 stays with nightly EGP price + free-cancellation badge."},
+  {wk:2,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Thursday-only urgency: top 3 stays under EGP 3,000",ex:"EN: 'Tonight only 🌙 top 3 weekend stays under EGP 3,000, 15% off. Book before midnight → [link]'"},
+  {wk:2,day:"fri",ch:"instagram",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Discovery",tm:"6:00 PM",t:"Existing IG Reel: 'Woke up to this view' weekend diary",ex:"Reel, EGP price overlay. Caption: 'Woke up to this view — and it cost less than you'd think.'"},
+  {wk:2,day:"sat",ch:"facebook",seg:"leg",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): 'Signs you're ready for a vacation'",ex:"Caption: 'If these sound familiar… it's time for a family getaway ✈️'"},
+  {wk:3,day:"wed",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"All day",t:"Reassurance strip at off-app handoff",ex:"At the booking handoff add a 1-line strip: 'Secure checkout · free cancellation on most stays · prices shown in EGP.'"},
+  {wk:3,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Conversion send: 15% off, no-hidden-cost framing",ex:"EN: 'The price you see is the price you pay — in EGP, 15% off this weekend, no FX surprises → [link]'"},
+  {wk:3,day:"sat",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'Camera roll after...'",ex:"Rapid photo montage of a destination, trending audio."},
+  {wk:3,day:"sun",ch:"instagram",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"1:00 PM",t:"Existing IG Reel: 'Trusted hotels, book with confidence'",ex:"Caption: 'Compare, book, and travel with confidence — priced in EGP.'"},
+  {wk:4,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Weekly Thursday urgency framing",ex:"EN: 'Last call for the weekend 🏖️ book tonight, travel Friday. 15% off, EGP prices → [link]'"},
+  {wk:4,day:"sat",ch:"facebook",seg:"leg",asset:"Carousel",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): budget-friendly destinations",ex:"Caption: 'Big trips don't always need big budgets — here's proof ✈️'"},
+ ],
+ [ // SEPTEMBER — M2: AI booking entry + weekly newsletter launch; build Search pages ($0)
+  {wk:1,day:"mon",ch:"inapp",seg:"both",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Place AI-assisted booking entry centrally on homepage",ex:"Add a central 'Ask Journeys — plan my weekend' AI entry point on the homepage, above the fold, so decision help is one tap from landing."},
+  {wk:1,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Conversion send Wed–Thu, 15% off, EGP",ex:"EN: 'Autumn reset weekend? Cairo-to-coast stays from EGP 2,400, 15% off, in EGP. Ends Thu 11pm → [link]'"},
+  {wk:1,day:"sat",ch:"instagram",seg:"leg",asset:"Carousel",type:"Organic",lang:"English",obj:"Traffic",tm:"1:00 PM",t:"Existing IG: 'Budget-friendly destinations 2026'",ex:"Caption: 'Big trips don't always need big budgets ✈️ These destinations prove it.'"},
+  {wk:1,day:"sun",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'Where time slows down'",ex:"Caption: 'That's the plan. No emails. No meetings. Just this 🏖️'"},
+  {wk:2,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Weekly editorial newsletter LAUNCHES: 'Top 5 domestic stays'",ex:"Editorial email #1: 'Top 5 domestic stays under EGP 3,000 this month' — 5 hand-picked stays with real EGP prices + a one-line why. Owned channel, content only."},
+  {wk:2,day:"wed",ch:"search",seg:"both",asset:"Landing Page",type:"Organic",lang:"English",obj:"Traffic",tm:"All day",t:"Build destination page #1 (EGP + zero-FX)",ex:"Landing page H1: 'Hurghada Hotels — Booked in EGP, No FX Fees'. List 6 stays with EGP nightly price + free-cancellation badge. No paid spend yet."},
+  {wk:2,day:"thu",ch:"sms",seg:"bl",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Loyalist track (only if M2 capacity): Breadfast Pay",ex:"EN: 'Already on Breadfast? Pay for your stay with Breadfast Pay, in EGP. Weekend trips from EGP 2,500 → [link]'"},
+  {wk:2,day:"sat",ch:"facebook",seg:"leg",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): 'Discover your Journey'",ex:"Caption: 'Explore endless destinations with Journeys 🌍 — for the whole family.'"},
+  {wk:3,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #2: '48 hours in Alexandria on a budget'",ex:"Editorial email #2: a short weekend itinerary with real EGP costs and 3 bookable stays."},
+  {wk:3,day:"wed",ch:"search",seg:"both",asset:"Landing Page",type:"Organic",lang:"English",obj:"Traffic",tm:"All day",t:"Build destination page #2 (top segment)",ex:"Second page for North Coast / Sokhna: H1 'North Coast Stays in EGP', same EGP-price + cancellation module. These pages back the paid pilot next month."},
+  {wk:3,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Reset-weekend conversion send",ex:"EN: 'Beat the back-to-routine slump 😌 a 2-night reset from EGP 2,400, 15% off. Book tonight → [link]'"},
+  {wk:3,day:"sun",ch:"instagram",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Discovery",tm:"6:00 PM",t:"Existing IG Reel: weekend diary, EGP overlay",ex:"Reel: 'A quiet weekend in Fayoum' with EGP price on screen."},
+  {wk:4,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #3: 'Where Egyptians are booking this month'",ex:"Editorial email #3: round-up of popular domestic stays + one 'without a visa' international pick."},
+  {wk:4,day:"tue",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Banner refresh: 'Why book travel inside Breadfast'",ex:"Rotate banner to a benefit reminder: 'Same app you trust for groceries — now for hotels. EGP prices, Breadfast support.'"},
+  {wk:4,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Thursday urgency",ex:"EN: 'Weekend's almost here ⏳ lock a stay from EGP 2,500, 15% off, in EGP → [link]'"},
+  {wk:4,day:"sat",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): destination montage",ex:"Cross-post, trending audio."},
+ ],
+ [ // OCTOBER — M3: Search capped PAID pilot (the only paid spend)
+  {wk:1,day:"wed",ch:"search",seg:"both",asset:"Landing Page",type:"Organic",lang:"English",obj:"Traffic",tm:"All day",t:"SEO/GEO page live: 'best local hotel booking app Cairo'",ex:"Publish an intent page targeting 'best hotel booking app Egypt' with EGP + zero-FX framing and a Breadfast-trust section."},
+  {wk:1,day:"thu",ch:"search",seg:"both",asset:"Text",type:"Paid",lang:"English",obj:"Conversion",tm:"Always-on (capped)",budget:150,t:"Capped paid-search pilot: comparison keywords",ex:"Google Ads headline: 'Hurghada Hotels in EGP | No Hidden FX Fees'. Keywords: 'hurghada hotel booking', 'cheaper than booking egypt'. Daily cap so weekly ≤ $150."},
+  {wk:1,day:"tue",ch:"sms",seg:"both",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Armed Forces Day (Oct 6) long-weekend getaway",ex:"EN: 'Long weekend coming up 🎖️ grab a getaway from EGP 2,500, 15% off, before it books out → [link]'"},
+  {wk:1,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #4: 'Long-weekend stays for Oct 6'",ex:"Editorial email: 5 long-weekend picks with EGP prices, timed to Armed Forces Day."},
+  {wk:1,day:"sat",ch:"instagram",seg:"leg",asset:"Carousel",type:"Organic",lang:"English",obj:"Traffic",tm:"1:00 PM",t:"Existing IG: 'Top destinations you can't miss'",ex:"Caption: '2026 travel plans start now 🌍 these are on every traveler's bucket list.'"},
+  {wk:1,day:"sun",ch:"facebook",seg:"leg",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): long-weekend ideas",ex:"Caption: 'Make the most of the long weekend — family stays from EGP 2,500.'"},
+  {wk:2,day:"wed",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"All day",t:"Weekly banner refresh: one Breadfast benefit tile",ex:"Rotate to: 'Booked in EGP. Backed by Breadfast. Cancel free on most stays.'"},
+  {wk:2,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Post-holiday value weekend",ex:"EN: 'Missed the long weekend? Do a mini-escape instead — from EGP 2,300, 15% off → [link]'"},
+  {wk:2,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #5: 'Shoulder-season secret prices'",ex:"Editorial email: why October is the best-value month, with 5 stays."},
+  {wk:2,day:"sun",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'Where time slows down'",ex:"Caption: 'That's the plan. No emails. Just this 🏖️'"},
+  {wk:3,day:"thu",ch:"search",seg:"both",asset:"Text",type:"Paid",lang:"English",obj:"Conversion",tm:"Always-on (capped)",budget:100,t:"Capped pilot cont.: 'cheaper than Booking Egypt'",ex:"Second ad group on price-comparison intent; landing on destination page #1. Keep total pilot spend within the cap."},
+  {wk:3,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Autumn value weekend, EGP-only",ex:"EN: 'Shoulder-season prices are the best-kept secret 🤫 stays from EGP 2,200, 15% off → [link]'"},
+  {wk:3,day:"sat",ch:"facebook",seg:"leg",asset:"Static Image",type:"Organic",lang:"English",obj:"Traffic",tm:"1:00 PM",t:"Existing FB: 'Fun fact' destination stat",ex:"Caption: 'Fun fact ✨ always room for your next trip.'"},
+  {wk:3,day:"fri",ch:"instagram",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Discovery",tm:"6:00 PM",t:"Existing IG Reel: weekend diary, EGP overlay",ex:"Reel weekend diary with EGP overlay."},
+  {wk:4,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Thursday urgency",ex:"EN: 'Weekend loading ⏳ from EGP 2,300, 15% off, instant confirmation → [link]'"},
+  {wk:4,day:"sun",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): montage",ex:"Cross-post, trending audio."},
+ ],
+ [ // NOVEMBER — M4: Search review + Social organic test begins (Instagram, NO paid); pillar-led content
+  {wk:1,day:"wed",ch:"search",seg:"both",asset:"Text",type:"Paid",lang:"English",obj:"Conversion",tm:"Decision point",budget:0,t:"SEARCH REVIEW: pilot CVR vs 3.18% organic benchmark",ex:"Pull the pilot's conversion rate; compare to the 3.18% organic benchmark. Decision: expand budget next cycle, or hold. Log the number, don't rationalise it."},
+  {wk:1,day:"thu",ch:"instagram",seg:"we",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Discovery",tm:"6:00 PM",t:"SOCIAL TEST BEGINS · Pillar 2 weekend diary (IG only, NO paid)",ex:"Reel (Pillar 2 · Travel inspiration): 'A night in El Gouna — here's the actual EGP cost 👇' Real local stay, EGP price on screen, no discount graphic."},
+  {wk:1,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Weekend sun conversion send, EGP",ex:"EN: 'Chase the last of the sun ☀️ Red Sea stays from EGP 2,600, 15% off, in EGP → [link]'"},
+  {wk:1,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #6: 'Plan your winter break early'",ex:"Editorial email: winter-sun picks + a 'book early' nudge."},
+  {wk:2,day:"tue",ch:"instagram",seg:"bl",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Awareness",tm:"6:00 PM",t:"Pillar 1 origin story: 'why Breadfast built Journeys'",ex:"Reel (Pillar 1 · Brand meaning): 'From a supermarket in your pocket to a travel agency in your pocket.' Answers 'why does Breadfast do travel?'"},
+  {wk:2,day:"thu",ch:"sms",seg:"bl",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Loyalist: plan winter break, Breadfast Pay",ex:"EN: 'Winter break sorted? Lock it now, pay in EGP with Breadfast Pay. Popular stays go fast → [link]'"},
+  {wk:2,day:"fri",ch:"instagram",seg:"both",asset:"Carousel",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"6:00 PM",t:"Pillar 3 booking confidence: hotel-expert proof",ex:"Carousel (Pillar 3): 'You won't believe this is a hotel gym' / 'Not every hotel does breakfast like this' — proof that reduces pre-booking hesitation."},
+  {wk:3,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Thursday urgency, EGP",ex:"EN: 'Weekend's here 🎒 stays from EGP 2,500, 15% off, booked in EGP → [link]'"},
+  {wk:3,day:"fri",ch:"instagram",seg:"bl",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Retention",tm:"6:00 PM",t:"Pillar 4 identity framing: 'Type A vs Type B travellers'",ex:"Reel (Pillar 4 · Loyalty): playful 'Type A vs Type B traveller' — sustains engagement between trips."},
+  {wk:3,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #7: 'Where can Egyptians travel without a visa?'",ex:"Editorial email (local knowledge): visa-free picks + bookable stays."},
+  {wk:4,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"End-of-month weekend send",ex:"EN: 'One more weekend before December 🍂 stays from EGP 2,400, 15% off → [link]'"},
+  {wk:4,day:"sun",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): montage",ex:"Cross-post, trending audio."},
+ ],
+ [ // DECEMBER — M5: Social organic continues (tracked); Loyalist gift-voucher test; newsletter
+  {wk:1,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Year-end weekend getaway, EGP",ex:"EN: 'Close out the year by the sea 🌅 Red Sea stays from EGP 2,700, 15% off, in EGP → [link]'"},
+  {wk:1,day:"fri",ch:"instagram",seg:"we",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Discovery",tm:"6:00 PM",t:"Pillar 2 weekend diary: 'winter sun without the passport'",ex:"Reel (Pillar 2): a Red Sea stay, EGP price on screen, honest local framing."},
+  {wk:1,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #8: 'Top 5 winter-sun stays'",ex:"Editorial email: warm-escape picks with EGP prices."},
+  {wk:1,day:"sun",ch:"facebook",seg:"leg",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Traffic",tm:"1:00 PM",t:"Existing FB (family-led): 'Snow season / holidays'",ex:"Caption: 'Holidays, winter magic, and last-minute getaway plans 🎄'"},
+  {wk:2,day:"wed",ch:"inapp",seg:"bl",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"All day",t:"One-off cross-sell TEST to Loyalists (coordination only, no ladder)",ex:"Show one Loyalist cohort a tile: 'Use your Breadfast gift voucher on Journeys.' No new loyalty engine — surface the existing voucher (88.9% confirm rate)."},
+  {wk:2,day:"thu",ch:"sms",seg:"bl",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Loyalist: gift vouchers now usable on Journeys",ex:"EN: 'Your Breadfast gift voucher now works on Journeys 🎁 turn it into a winter escape → [link]'  |  AR: 'كوبون بريدفاست بقى يشتغل على Journeys 🎁 حوّله لرحلة شتوية → [link]'"},
+  {wk:2,day:"fri",ch:"instagram",seg:"both",asset:"Carousel",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"6:00 PM",t:"Pillar 3 booking confidence + track vs benchmark",ex:"Carousel (Pillar 3): itinerary spotlight with genuine detail ('I wake up to fresh baladi bread every morning'). Log saves/shares vs the existing discount-graphic benchmark — evidence for the M6 decision."},
+  {wk:2,day:"sat",ch:"tiktok",seg:"leg",asset:"Carousel",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'Top hot chocolate cafés'",ex:"Caption: 'Warning: this list may cause spontaneous flight bookings ✈️'"},
+  {wk:3,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Last-minute year-end escape (Thu only)",ex:"EN: 'Still no year-end plan? 🎆 last-minute stays from EGP 2,800, 15% off → [link]'"},
+  {wk:3,day:"fri",ch:"instagram",seg:"bl",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Retention",tm:"6:00 PM",t:"Pillar 4 'Cairo needed leaving' beat",ex:"Reel (Pillar 4): 'The hard work pays off when you're here' — end-of-year burnout beat that makes Journeys the default."},
+  {wk:3,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #9: 'Where the Journeys team is booking for NYE'",ex:"Editorial email (team POV): honest picks with EGP prices."},
+ ],
+ [ // JANUARY — M6: DECISION GATE
+  {wk:1,day:"wed",ch:"inapp",seg:"both",asset:"Static Image",type:"Organic",lang:"Both (EN+AR)",obj:"Retention",tm:"All day",t:"MONTH 6 DECISION GATE: review all four channels",ex:"Team review: In-App (did the 22pp collapse narrow?), SMS (volume lift?), Search (held near 3.18%?), Social (beat the existing-campaign benchmark?). Cut what didn't work; scale what did."},
+  {wk:1,day:"thu",ch:"sms",seg:"we",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"New-year weekend sun, EGP",ex:"EN: 'New year, first escape 🎆 Red Sea stays from EGP 2,700, 15% off, in EGP → [link]'"},
+  {wk:1,day:"fri",ch:"instagram",seg:"bl",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Retention",tm:"6:00 PM",t:"Pillar 4 identity framing: 'new-year traveller types'",ex:"Reel (Pillar 4): '2027 traveller types — which are you?' — re-engages between trips."},
+  {wk:1,day:"tue",ch:"email",seg:"both",asset:"Newsletter",type:"Organic",lang:"Both (EN+AR)",obj:"Engagement",tm:"11:00 AM",t:"Newsletter #10: 'Start 2027 with a weekend away'",ex:"Editorial email: fresh-start weekend picks with EGP prices."},
+  {wk:2,day:"wed",ch:"search",seg:"both",asset:"Text",type:"Paid",lang:"English",obj:"Conversion",tm:"Decision point",budget:0,t:"SEARCH decision: expand or hold",ex:"If the pilot held near 3.18%, request an expanded search budget for next cycle. If not, hold paid search — the organic strength may not transfer."},
+  {wk:2,day:"thu",ch:"sms",seg:"both",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",tm:"8:00 PM",t:"Revolution Day (Jan 25) long-weekend getaway",ex:"EN: 'Long weekend ahead 🚩 lock a getaway from EGP 2,500, 15% off, before it books out → [link]'"},
+  {wk:2,day:"fri",ch:"instagram",seg:"we",asset:"Video",type:"Organic",lang:"Both (EN+AR)",obj:"Discovery",tm:"6:00 PM",t:"SOCIAL decision: release paid or hold",ex:"Summarise organic engagement vs the existing-campaign benchmark. If organic won, that earns paid budget or a second platform next cycle; if not, hold paid social again."},
+  {wk:2,day:"sun",ch:"tiktok",seg:"leg",asset:"Video",type:"Organic",lang:"English",obj:"Traffic",tm:"7:00 PM",t:"Existing TikTok (cross-post): 'New year, new city'",ex:"Caption: 'The best resolutions are room service fries and a good view.'"},
+ ],
+];
+
+const DEFAULT_BRANDPILLARS=[
+ {n:1,name:"Brand meaning",cc:"#0E7A63",seg:"bl",stage:"Consideration",
+  emotion:"Wait, Breadfast does travel now? Why?",
+  goal:"Move Breadfast users from \u201Cdidn\u2019t know Journeys exists\u201D to \u201Cmakes sense they\u2019d do this\u201D \u2014 Journeys as a natural extension of the Breadfast brand.",
+  avenues:[
+   "The origin story \u2014 \u201CWhy Breadfast built a travel service\u201D \u00B7 \u201CFrom a supermarket in your pocket to a travel agency in your pocket\u201D",
+   "Clear stances on Egyptian travel \u2014 \u201CThe price you see is the price you pay\u201D",
+   "Show what\u2019s special \u2014 \u201CAI trip help? What even is that?\u201D \u00B7 \u201CHard time reading reviews? We sum it up for you\u201D",
+   "Founder / team POV \u2014 \u201CThe rule we made on day one\u201D \u00B7 \u201CThe promise we won\u2019t break\u201D \u00B7 \u201CA letter from the team\u201D"
+  ]},
+ {n:2,name:"Travel inspiration",cc:"#2E75B6",seg:"we",stage:"Discovery",
+  emotion:"Could this be my next weekend?",
+  goal:"Compress the mental leap between \u201CI need a break\u201D and \u201CI\u2019ve booked something.\u201D Shorten the planning-to-booking window.",
+  avenues:[
+   "Weekend diaries \u2014 \u201CA night in El Gouna\u201D \u00B7 \u201CWoke up to this view\u201D \u00B7 \u201CHow to spend 24hrs in Alexandria\u201D",
+   "Seasonal round-ups tied to bookable inventory \u2014 Eid, holidays, Valentine\u2019s \u00B7 \u201CWhere to stay this Valentine\u2019s\u201D \u00B7 \u201C10 stays that put you by the sea\u201D",
+   "Location inspiration \u2014 \u201CPopular places Egyptians are booking\u201D \u00B7 \u201CLove Game of Thrones? Check these out\u201D \u00B7 \u201CSahel or Red Sea?\u201D",
+   "Local knowledge \u2014 \u201CWhere can Egyptians travel without a visa?\u201D"
+  ]},
+ {n:3,name:"Booking confidence",cc:"#B8860B",seg:"both",stage:"Conversion",
+  emotion:"Is this going to actually work out if I book?",
+  goal:"Reduce pre-booking hesitation using proof mechanisms Journeys can execute today.",
+  avenues:[
+   "Recommendations from hotel experts \u2014 \u201CYou won\u2019t believe this is a hotel gym\u201D \u00B7 \u201CNot every hotel does breakfast like this\u201D",
+   "Itinerary spotlights with genuine detail \u2014 \u201CHow I spent only EGP X a day\u201D \u00B7 \u201CI wake up to fresh baladi bread every morning\u201D",
+   "Customer-service moments \u2014 \u201CCalled room service and they saved my day\u201D \u00B7 \u201CYou can\u2019t believe what\u2019s included\u201D"
+  ]},
+ {n:4,name:"Long-term loyalty",cc:"#B5306E",seg:"bl",stage:"Retention",
+  emotion:"When\u2019s the next one?",
+  goal:"Sustain engagement between trips and make Journeys the default.",
+  avenues:[
+   "Identity framing \u2014 \u201CType A vs Type B travellers\u201D \u00B7 \u201CHotels and their zodiac signs\u201D \u00B7 \u201CEgyptians-abroad checklist\u201D",
+   "\u201CCairo needed leaving\u201D beats \u2014 heatwaves, month-end burnout \u00B7 \u201C37\u00B0C is not where I want to be\u201D \u00B7 \u201CThe hard work pays off when you\u2019re here\u201D",
+   "Re-sharing customer trip stories with light commentary \u2014 \u201CFifth time he\u2019s said this \u2014 okay, booking it\u201D",
+   "Team POV \u2014 where the Journeys team is booking their next weekend"
+  ]},
+];
+const DEFAULT_HISTORY=[
+ {item:"AFCON promo",ch:"Meta (paid)",obj:"Conversion",spend:400},
+ {item:"Holiday 'Travel Mania'",ch:"Meta (paid)",obj:"Awareness",spend:300},
+ {item:"App-launch video",ch:"Meta (paid)",obj:"Awareness",spend:300},
+ {item:"'Guess the destination' contest",ch:"Instagram (paid)",obj:"Engagement",spend:200},
+ {item:"Influencer (Farida el Zoghby)",ch:"Instagram (paid)",obj:"Engagement",spend:720},
+ {item:"Billboards ×2",ch:"OOH (paid)",obj:"Awareness",spend:0},
+];
+const DEFAULT_NEWPLAN=[
+ {ch:"In-App & Homepage",spend:"$0",move:"keep",why:"Owned; banner, AI booking entry & weekly newsletter cost content time, not media"},
+ {ch:"SMS",spend:"$0",move:"keep",why:"Scheduling and copy, no media (15% discount sweet spot)"},
+ {ch:"Search",spend:"capped",move:"grow",why:"27× In-App at zero base — capped pilot on comparison keywords only"},
+ {ch:"Social (organic)",spend:"$0",move:"cut",why:"Earn the right to spend; one lead platform, organic only this cycle"},
+ {ch:"Paid awareness / billboards",spend:"$0",move:"cut",why:"Zero attributable bookings"},
+];
+
+function nthWeekday(y,m,wd,n){let d=new Date(y,m,1),c=0;while(d.getMonth()===m){if(d.getDay()===wd){c++;if(c===n)return new Date(d);}d.setDate(d.getDate()+1);}return null;}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function buildSeed(){const ev={};MONTHS.forEach((mo,mi)=>{(SEED[mi]||[]).forEach(s=>{const date=nthWeekday(mo.y,mo.m,D[s.day],s.wk);if(!date)return;const key=ymd(date);(ev[key]=ev[key]||[]).push({ch:s.ch,seg:s.seg,t:s.t,ex:s.ex||"",tm:s.tm||"",asset:s.asset||"Static Image",type:s.type||"Organic",lang:s.lang||"Both (EN+AR)",obj:s.obj||"Traffic",b:s.budget||0});});});return ev;}
+
+const KEY="jbb_visual_cal_v6";
+let state=load();
+let cur=0;
+let filter={we:true,bl:true,both:true,leg:true};
+
+function load(){let s={};try{const raw=localStorage.getItem(KEY);if(raw)s=JSON.parse(raw);}catch(e){}
+  if(!s.events)s.events=buildSeed();
+  if(!s.brandpillars)s.brandpillars=JSON.parse(JSON.stringify(DEFAULT_BRANDPILLARS));
+  if(!s.history)s.history=JSON.parse(JSON.stringify(DEFAULT_HISTORY));
+  if(!s.newplan)s.newplan=JSON.parse(JSON.stringify(DEFAULT_NEWPLAN));
+  return s;}
+function saveNow(){try{localStorage.setItem(KEY,JSON.stringify(state));flash("Saved &#10003;");}catch(e){flash("Storage off");}}
+let tt=null;function autosave(){clearTimeout(tt);tt=setTimeout(saveNow,500);}
+function flash(m){const n=document.getElementById('savenote');n.innerHTML=m;setTimeout(()=>n.innerHTML="Auto-saved",1400);}
+function esc(s){return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+b.dataset.v).classList.add('active');
+});
+document.querySelectorAll('.fchip').forEach(c=>{c.addEventListener('click',()=>{const s=c.dataset.seg;filter[s]=!filter[s];c.classList.toggle('off',!filter[s]);renderGrid();});});
+
+function phaseClass(p){return p==="Quick Wins"?"ph-qw":p==="Build"?"ph-build":"ph-scale";}
+function monthBudget(mi){const mo=MONTHS[mi];const dim=new Date(mo.y,mo.m+1,0).getDate();let sum=0;for(let d=1;d<=dim;d++){(state.events[ymd(new Date(mo.y,mo.m,d))]||[]).forEach(e=>sum+=(+e.b||0));}return sum;}
+
+function renderDOW(){const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];document.getElementById('dow').innerHTML=days.map((d,i)=>`<div class="dow ${i===4?'thu':''}">${d}</div>`).join("");}
+function renderMeta(){
+  const mo=MONTHS[cur];document.getElementById('mtitle').textContent=mo.name;const bud=monthBudget(cur);
+  const parts=mo.call.split('&middot;');
+  document.getElementById('monthmeta').innerHTML=
+    `<span class="bigphase">${mo.phase}</span>
+     <span class="phasebadge ${phaseClass(mo.phase)}">${parts[0].trim()}</span>
+     <span class="call">${parts[1]?parts[1].trim():mo.call}</span>
+     <span class="hook">${mo.hook}</span>
+     <span class="budget ${bud?'':'zero'}">Paid: ${bud?('$'+bud+' capped Search pilot'):'$0 owned/organic'}</span>`;
+}
+function renderGrid(){
+  const mo=MONTHS[cur];const first=new Date(mo.y,mo.m,1);const start=first.getDay();const dim=new Date(mo.y,mo.m+1,0).getDate();
+  let cells="";for(let i=0;i<start;i++)cells+=`<div class="day empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const date=new Date(mo.y,mo.m,d);const key=ymd(date);const dow=date.getDay();
+    const evs=(state.events[key]||[]).filter(e=>filter[e.seg]);const fest=FESTIVALS[key];
+    let chips=evs.slice(0,3).map(e=>{
+      const meta=`${CHLABEL[e.ch]||e.ch} · ${e.asset} · ${e.type} · ${e.lang} · ${e.obj}${e.tm?(' · '+e.tm):''}${(+e.b)?(' · $'+e.b):''}${e.ex?('\n\n“'+e.ex+'”'):''}`;
+      return `<div class="evt seg-${e.seg}" title="${esc(meta)}"><span style="color:var(--${SEGVAR[e.seg]||'both'})">${ICONS[e.ch]||""}</span><div class="etw"><span class="et">${esc(e.t)}</span>${e.tm?`<span class="tm">\u23F0 ${esc(e.tm)}</span>`:""}</div>${(+e.b)?`<span class="cb">$${e.b}</span>`:""}</div>`;
+    }).join("");
+    if(evs.length>3)chips+=`<div class="more">+${evs.length-3} more</div>`;
+    cells+=`<div class="day ${dow===4?'thu':''}" style="animation-delay:${Math.min(d*10,240)}ms" onclick="openDay('${key}')"><div class="dn">${d}</div>${fest?`<div class="fest">${fest}</div>`:""}${chips}</div>`;
+  }
+  document.getElementById('grid').innerHTML=cells;renderMeta();
+}
+function prevM(){if(cur>0){cur--;renderGrid();}}
+function nextM(){if(cur<MONTHS.length-1){cur++;renderGrid();}}
+
+let curKey=null;
+function openDay(key){
+  curKey=key;const d=new Date(key);const opts={weekday:'long',year:'numeric',month:'long',day:'numeric'};
+  document.getElementById('dtitle').textContent=d.toLocaleDateString('en-US',opts);
+  const fest=FESTIVALS[key];const dow=d.getDay();
+  document.getElementById('dsub').innerHTML=(dow===4?"&#9733; Thursday &mdash; peak booking day. ":"")+(fest?("Holiday: "+fest):"");
+  renderDrawer();
+  document.getElementById('scrim').classList.add('open');document.getElementById('drawer').classList.add('open');
+}
+function closeDrawer(){document.getElementById('scrim').classList.remove('open');document.getElementById('drawer').classList.remove('open');renderGrid();}
+function sel(f,i,v,opts){return `<select onchange="upd(${i},'${f}',this.value)">${opts.map(o=>`<option ${v===o?'selected':''}>${o}</option>`).join("")}</select>`;}
+function selKV(f,i,v,map){return `<select onchange="upd(${i},'${f}',this.value)">${Object.keys(map).map(k=>`<option value="${k}" ${v===k?'selected':''}>${map[k]}</option>`).join("")}</select>`;}
+function renderDrawer(){
+  const evs=state.events[curKey]||[];
+  let html=evs.map((e,i)=>`
+    <div class="item seg-${e.seg}">
+      <span class="segchip sc-${e.seg}">${SEGLABEL[e.seg]||""}</span>
+      <div class="grid2">${selKV('ch',i,e.ch,CHLABEL)}${selKV('seg',i,e.seg,SEGLABEL)}${sel('asset',i,e.asset,ASSETS)}${sel('type',i,e.type,TYPES)}${sel('lang',i,e.lang,LANGS)}${sel('obj',i,e.obj,OBJS)}</div>
+      <label class="fl">Calendar label</label>
+      <textarea class="txt" oninput="upd(${i},'t',this.value)">${esc(e.t)}</textarea>
+      <label class="fl">Example / copy (the actual SMS text, caption, or in-app operation)</label>
+      <textarea class="txt ex" oninput="upd(${i},'ex',this.value)">${esc(e.ex||"")}</textarea>
+      <div class="row2"><label>Publish time</label><input class="tin" list="times" value="${esc(e.tm||"")}" oninput="upd(${i},'tm',this.value)" placeholder="e.g. Thu 8:00 PM"></div>
+      <div class="row2"><label>Paid spend $</label><input class="cost" type="number" min="0" step="10" value="${+e.b||0}" oninput="upd(${i},'b',this.value)"><button class="del" onclick="delItem(${i})">Delete</button></div>
+    </div>`).join("");
+  html+=`<button class="additem" onclick="addItem()">+ Add content item</button>`;
+  document.getElementById('dbody').innerHTML=html;
+}
+function upd(i,f,v){state.events[curKey][i][f]=(f==='b'?(+v||0):v);if(f==='seg')renderDrawer();autosave();}
+function delItem(i){state.events[curKey].splice(i,1);if(!state.events[curKey].length)delete state.events[curKey];renderDrawer();autosave();}
+function addItem(){(state.events[curKey]=state.events[curKey]||[]).push({ch:"sms",seg:"both",t:"",ex:"",tm:"",asset:"Text",type:"Organic",lang:"Both (EN+AR)",obj:"Conversion",b:0});renderDrawer();autosave();}
+
+function exportJSON(){const b=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download="JbB_Visual_Calendar.json";a.click();}
+function importJSON(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=JSON.parse(r.result);if(!state.brandpillars)state.brandpillars=JSON.parse(JSON.stringify(DEFAULT_BRANDPILLARS));if(!state.history)state.history=JSON.parse(JSON.stringify(DEFAULT_HISTORY));if(!state.newplan)state.newplan=JSON.parse(JSON.stringify(DEFAULT_NEWPLAN));renderAll();saveNow();flash("Imported &#10003;");}catch(e){alert("Invalid file");}};r.readAsText(f);}
+function resetAll(){if(confirm("Reset everything to defaults? Your edits will be lost.")){state={events:buildSeed(),brandpillars:JSON.parse(JSON.stringify(DEFAULT_BRANDPILLARS)),history:JSON.parse(JSON.stringify(DEFAULT_HISTORY)),newplan:JSON.parse(JSON.stringify(DEFAULT_NEWPLAN))};renderAll();saveNow();flash("Reset");}}
+
+document.getElementById('roadmapTbl').innerHTML=`<table style="table-layout:auto">
+ <tr><th>Month</th><th>Phase</th><th>Call</th><th>Seasonal hook</th></tr>
+ ${MONTHS.map(m=>`<tr><td>${m.name}</td><td><span class="phasebadge ${phaseClass(m.phase)}">${m.phase}</span></td><td>${m.call}</td><td>${m.hook}</td></tr>`).join("")}
+</table>`;
+
+function renderBudget(){
+  let total=0;
+  const rows=MONTHS.map((m,i)=>{const b=monthBudget(i);total+=b;const where=b?'Capped paid-search pilot':(i>=3?'Social organic test ($0)':'Owned only ($0)');return `<tr><td>${m.name}</td><td><span class="phasebadge ${phaseClass(m.phase)}">${m.phase}</span></td><td class="num">${b?('$'+b):'$0'}</td><td>${where}</td></tr>`;}).join("");
+  document.getElementById('budgetTbl').innerHTML=`<table style="table-layout:auto"><tr><th>Month</th><th>Phase</th><th>Paid spend</th><th>Where it goes</th></tr>${rows}
+   <tr><td><b>6-month total</b></td><td></td><td class="num"><b>$${total}</b></td><td>All paid spend is the capped Search pilot; everything else owned/organic</td></tr></table>`;
+}
+function objColor(o){return ({Conversion:'#0E7A63',Awareness:'#8a6d00',Engagement:'#B5306E',Traffic:'#2E75B6',Discovery:'#5E3EA3',Retention:'#2E5FA3'})[o]||'#ccc';}
+function renderHistory(){
+  let total=0;
+  const rows=state.history.map((h,i)=>{total+=(+h.spend||0);return `<tr style="border-left:5px solid ${objColor(h.obj)}">
+    <td><input value="${esc(h.item)}" oninput="updHist(${i},'item',this.value)"></td>
+    <td><input value="${esc(h.ch)}" oninput="updHist(${i},'ch',this.value)"></td>
+    <td><select class="tg tg-${esc(h.obj)}" onchange="updHist(${i},'obj',this.value)">${OBJS.map(o=>`<option ${h.obj===o?'selected':''}>${o}</option>`).join("")}</select></td>
+    <td class="num"><input class="num" type="number" min="0" step="10" value="${+h.spend||0}" oninput="updHist(${i},'spend',this.value)"></td>
+    <td><button class="delrow" onclick="delHist(${i})">✕</button></td></tr>`;}).join("");
+  document.getElementById('histTbl').innerHTML=`<table><tr><th style="width:34%">Item</th><th style="width:22%">Channel</th><th style="width:22%">Objective</th><th style="width:14%">Spend $</th><th style="width:8%"></th></tr>${rows}
+    <tr><td colspan="3"><b>Known paid total</b></td><td class="num"><b>$${total}</b></td><td></td></tr></table>
+    <button class="trow-btn" onclick="addHist()">+ Add spend row</button>`;
+}
+function updHist(i,f,v){state.history[i][f]=(f==='spend'?(+v||0):v);renderHistory();autosave();}
+function delHist(i){state.history.splice(i,1);renderHistory();autosave();}
+function addHist(){state.history.push({item:"",ch:"",obj:"Awareness",spend:0});renderHistory();autosave();}
+
+function renderNewplan(){
+  const rows=state.newplan.map((n,i)=>`<tr>
+    <td><input value="${esc(n.ch)}" oninput="updNP(${i},'ch',this.value)"></td>
+    <td><input value="${esc(n.spend)}" oninput="updNP(${i},'spend',this.value)"></td>
+    <td><select class="tg mv-${esc(n.move)}" onchange="updNP(${i},'move',this.value)">${Object.keys(MOVEL).map(k=>`<option value="${k}" ${n.move===k?'selected':''}>${MOVEL[k]}</option>`).join("")}</select></td>
+    <td><input value="${esc(n.why)}" oninput="updNP(${i},'why',this.value)"></td>
+    <td><button class="delrow" onclick="delNP(${i})">✕</button></td></tr>`).join("");
+  document.getElementById('newplanTbl').innerHTML=`<table><tr><th style="width:24%">Channel</th><th style="width:16%">New spend</th><th style="width:14%">Move</th><th style="width:38%">Why</th><th style="width:8%"></th></tr>${rows}</table>
+    <button class="trow-btn" onclick="addNP()">+ Add channel</button>`;
+}
+function updNP(i,f,v){state.newplan[i][f]=v;renderNewplan();autosave();}
+function delNP(i){state.newplan.splice(i,1);renderNewplan();autosave();}
+function addNP(){state.newplan.push({ch:"",spend:"$0",move:"keep",why:""});renderNewplan();autosave();}
+
+function renderBrandPillars(){
+  document.getElementById('brandPillars').innerHTML=state.brandpillars.map((p,i)=>`
+    <div class="bp" style="--cc:${p.cc}">
+      <div class="bph"><div class="bpnum">${p.n}</div><input class="bptitle" value="${esc(p.name)}" oninput="updBP(${i},'name',this.value)"></div>
+      <div class="bptags"><span class="tag ${SEGVAR[p.seg]}">${SEGLABEL[p.seg]}</span><span class="tag t1" style="background:#eef;color:#445">${esc(p.stage)}</span></div>
+      <label class="lab">Core emotion</label>
+      <input class="emo" value="${esc(p.emotion)}" oninput="updBP(${i},'emotion',this.value)">
+      <label class="lab">Goal</label>
+      <textarea class="goal" oninput="updBP(${i},'goal',this.value)">${esc(p.goal)}</textarea>
+      <label class="lab">Content avenues</label>
+      <textarea class="aven" oninput="updBPav(${i},this.value)">${esc((p.avenues||[]).join("\n"))}</textarea>
+      <div class="avhint">One avenue per line.</div>
+    </div>`).join("");
+}
+function updBP(i,f,v){state.brandpillars[i][f]=v;autosave();}
+function updBPav(i,v){state.brandpillars[i].avenues=v.split("\n").filter(x=>x.trim()!=="");autosave();}
+
+function renderHooks(){
+  document.getElementById('hookGrid').innerHTML=HOOKS.map(h=>`<div class="hook ${h.cls}">
+    <div class="hh"><span class="hi">${h.ic}</span><div><div class="hw">${h.w}</div><div class="ho">${esc(h.o)}</div></div></div>
+    <div class="hb"><div class="r"><b>Behaviour:</b> ${esc(h.beh)}</div><div class="r"><b>Angle:</b> ${esc(h.ang)}</div></div>
+  </div>`).join("");
+}
+
+function renderAll(){renderDOW();renderGrid();renderBudget();renderHistory();renderNewplan();renderBrandPillars();renderHooks();}
+renderAll();
+</script>
+</body>
+</html>
